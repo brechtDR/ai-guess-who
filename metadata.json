@@ -1,0 +1,9 @@
+{
+  "name": "AI Guess Who?",
+  "description": "A modern take on the classic 'Guess Who?' game where you play against a powerful AI. Use a default set of characters or create your own custom game using your camera. Features voice input for asking questions.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "prompt": ""
+}

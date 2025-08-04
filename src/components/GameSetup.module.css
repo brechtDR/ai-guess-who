@@ -1,0 +1,134 @@
+
+.setupContainer {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+    animation: fadeIn 0.5s ease-out;
+}
+
+.titleContainer {
+    text-align: center;
+    margin-bottom: 3rem;
+    max-width: 600px;
+}
+
+.mainTitle {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: var(--space-2);
+    background: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+@media (min-width: 768px) {
+    .mainTitle {
+        font-size: 4rem;
+    }
+}
+
+.subtitle {
+    color: var(--color-text-secondary);
+    font-size: 1.25rem;
+    line-height: 1.5;
+}
+
+.statusContainer {
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: var(--space-4);
+}
+
+.progressBarContainer {
+    width: 100%;
+    background-color: var(--color-surface-2);
+    border-radius: var(--border-radius-md);
+    height: 8px;
+    margin-top: var(--space-4);
+    overflow: hidden;
+}
+
+.progressBar {
+    width: 0%;
+    height: 100%;
+    background-color: var(--color-primary);
+    border-radius: var(--border-radius-md);
+    transition: width 0.3s ease-in-out;
+}
+
+.errorText {
+    color: var(--color-error);
+    background-color: rgba(239, 68, 68, 0.1);
+    padding: var(--space-3);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--color-error);
+    width: 100%;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.optionsGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+    max-width: 56rem; /* max-w-4xl */
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .optionsGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.optionCard {
+    background-color: var(--color-surface-1);
+    border: 2px solid var(--color-surface-2);
+    border-radius: var(--border-radius-lg);
+    padding: var(--space-8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    color: var(--color-text-primary);
+    font-family: inherit;
+}
+
+.optionCard:hover:not(:disabled) {
+    border-color: var(--color-primary);
+    transform: translateY(-5px);
+    background-color: var(--color-surface-2);
+}
+
+.optionCard:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.iconWrapper {
+    width: 4rem; /* w-16 */
+    height: 4rem; /* h-16 */
+    color: var(--color-primary);
+    margin-bottom: var(--space-4);
+}
+
+.cardTitle {
+    font-size: 1.5rem; /* text-2xl */
+    font-weight: 700;
+    margin-bottom: var(--space-2);
+}
+
+.cardDescription {
+    color: var(--color-text-secondary);
+}

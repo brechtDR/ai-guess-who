@@ -1,0 +1,92 @@
+
+.perspectiveContainer {
+    width: 100%;
+    aspect-ratio: 3/4;
+    perspective: 1000px;
+    cursor: pointer;
+}
+
+.flipContainer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.6s ease-in-out;
+}
+
+.isFlipped {
+    transform: rotateY(180deg);
+}
+
+.cardFace {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    background-color: var(--color-surface-2);
+    border: 2px solid var(--color-surface-3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.cardImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    flex-grow: 1;
+}
+
+.cardNameWrapper {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--space-2);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+    text-align: center;
+}
+
+.cardName {
+    font-weight: 500;
+    color: var(--color-text-primary);
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cardBack {
+    transform: rotateY(180deg);
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary);
+}
+
+.cardBack span {
+    font-size: 4rem;
+    font-weight: 800;
+    color: var(--color-background);
+    opacity: 0.8;
+}
+
+.thinkingOverlay {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--border-radius-md);
+    animation: pulse 1.5s infinite;
+    box-shadow: 0 0 0 0 var(--color-primary);
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0px rgba(56, 189, 248, 0.7);
+    }
+    100% {
+        box-shadow: 0 0 0 10px rgba(56, 189, 248, 0);
+    }
+}

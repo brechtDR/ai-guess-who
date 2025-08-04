@@ -1,0 +1,206 @@
+
+.controlsContainer {
+    background-color: var(--color-surface-1);
+    border-radius: var(--border-radius-lg);
+    padding: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0; /* Prevent from shrinking */
+}
+
+.chatLog {
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-right: var(--space-2);
+}
+
+.message {
+    max-width: 80%;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--border-radius-lg);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.playerMessage {
+    background-color: var(--color-primary-dark);
+    color: var(--color-text-primary);
+    align-self: flex-end;
+    border-bottom-right-radius: var(--border-radius-sm);
+}
+
+.aiMessage {
+    background-color: var(--color-surface-2);
+    color: var(--color-text-primary);
+    align-self: flex-start;
+    border-bottom-left-radius: var(--border-radius-sm);
+}
+
+.systemMessage {
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 0.8rem;
+    align-self: center;
+    max-width: 100%;
+    width: 100%;
+    padding: var(--space-1);
+}
+
+.loadingMessage {
+    animation: pulse 1.5s infinite;
+}
+
+.actionsContainer {
+    min-height: 44px; /* Height of the input form */
+    display: flex;
+    justify-content: center;
+}
+
+.inputForm {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+}
+
+.textInput {
+    flex-grow: 1;
+    background-color: var(--color-surface-2);
+    border: 1px solid var(--color-surface-3);
+    border-radius: var(--border-radius-md);
+    padding: var(--space-2) var(--space-3);
+    color: var(--color-text-primary);
+    font-size: 1rem;
+    transition: var(--transition-fast);
+}
+
+.textInput:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-dark);
+}
+
+.textInput:disabled {
+    opacity: 0.5;
+}
+
+.iconButton {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.iconButton svg {
+    width: 24px;
+    height: 24px;
+    color: var(--color-text-primary);
+}
+
+.micIdle {
+    background-color: var(--color-surface-3);
+}
+.micIdle:hover {
+    background-color: var(--color-surface-2);
+}
+
+.micRecording {
+    background-color: var(--color-error);
+    animation: pulse 1.5s infinite;
+}
+
+.sendButton {
+    background-color: var(--color-primary-dark);
+}
+.sendButton:hover {
+    background-color: var(--color-primary);
+}
+.sendButton:disabled {
+    background-color: var(--color-surface-2);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.actionButton {
+    border: none;
+    font-weight: 700;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    font-size: 1rem;
+    color: var(--color-text-primary);
+}
+.actionButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.endTurnButton {
+    width: 100%;
+    max-width: 20rem;
+    background-color: var(--color-secondary);
+}
+
+.endTurnButton:hover:not(:disabled) {
+    filter: brightness(1.1);
+}
+
+.answerButtons {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-4);
+}
+
+.answerButtons .actionButton {
+    width: 8rem;
+}
+
+.yesButton {
+    background-color: var(--color-success);
+}
+.yesButton:hover:not(:disabled) {
+    filter: brightness(1.1);
+}
+
+.noButton {
+    background-color: var(--color-error);
+}
+.noButton:hover:not(:disabled) {
+    filter: brightness(1.1);
+}
+
+/* Mobile sticky footer */
+@media (max-width: 819px) {
+    .controlsContainer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        height: 180px;
+        max-height: 30vh;
+    }
+}
+
+/* Desktop layout adjustments */
+@container root (min-width: 820px) {
+    .controlsContainer {
+        height: 190px;
+        max-height: 25vh;
+    }
+}

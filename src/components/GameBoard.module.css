@@ -1,0 +1,23 @@
+
+.boardContainer {
+    padding: var(--space-2);
+    background-color: rgba(31, 41, 55, 0.5); /* slate-800 with opacity */
+    border-radius: var(--border-radius-lg);
+    container-type: inline-size; /* Define as a container */
+    container-name: board;
+}
+
+.boardGrid {
+    display: grid;
+    gap: var(--space-2);
+    /* Default for very narrow containers */
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* Use container queries to adjust columns based on the board's own width */
+@container board (min-width: 380px) {
+    .boardGrid {
+        gap: var(--space-4);
+        grid-template-columns: repeat(5, 1fr);
+    }
+}

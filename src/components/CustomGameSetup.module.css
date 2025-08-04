@@ -1,0 +1,177 @@
+
+.container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: var(--space-4);
+    gap: var(--space-6);
+    animation: fadeIn 0.5s ease-out;
+    overflow-y: auto;
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.error {
+    color: var(--color-error);
+    background-color: rgba(239, 68, 68, 0.1);
+    padding: var(--space-3);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--color-error);
+}
+
+.cameraContainer {
+    width: 100%;
+    max-width: 28rem;
+}
+
+.videoFeed {
+    width: 100%;
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transform: scaleX(-1);
+    background-color: var(--color-surface-1);
+}
+
+.canvas {
+    display: none;
+}
+
+.photoButton {
+    padding: var(--space-3) var(--space-6);
+    background-color: var(--color-primary);
+    color: var(--color-background);
+    font-weight: 700;
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.photoButton:hover:not(:disabled) {
+    transform: scale(1.05);
+}
+
+.photoButton:disabled {
+    background-color: var(--color-surface-3);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Mobile first */
+    gap: var(--space-2);
+    width: 100%;
+    max-width: 48rem;
+}
+
+@media (min-width: 500px) {
+    .grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: var(--space-4);
+    }
+}
+
+.slot {
+    aspect-ratio: 3/4;
+    background-color: var(--color-surface-1);
+    border: 2px dashed var(--color-surface-3);
+    border-radius: var(--border-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photoWrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    group: photo;
+}
+
+.photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--border-radius-md);
+}
+
+.photoOverlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: var(--transition-fast);
+}
+
+.photoWrapper:hover .photoOverlay {
+    opacity: 1;
+}
+
+.removeButton {
+    color: var(--color-error);
+    background: none;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+    padding: var(--space-2);
+}
+
+.photoName {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+    padding: var(--space-3) var(--space-1) var(--space-1);
+    font-size: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.plusSign {
+    color: var(--color-surface-3);
+    font-size: 2.5rem;
+    font-weight: 200;
+}
+
+.controls {
+    display: flex;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+}
+
+.controlButton {
+    padding: var(--space-3) var(--space-6);
+    font-weight: 700;
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.startButton {
+    background-color: var(--color-success);
+    color: var(--color-text-primary);
+}
+.startButton:disabled {
+    background-color: var(--color-surface-3);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.backButton {
+    background-color: var(--color-surface-2);
+    color: var(--color-text-primary);
+}

@@ -1,0 +1,64 @@
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.dialog {
+    background-color: var(--color-surface-1);
+    border: 1px solid var(--color-surface-2);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    padding: var(--space-8);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    max-width: 90vw;
+    width: 500px;
+}
+
+.title {
+    font-size: 2.25rem;
+    font-weight: 800;
+}
+
+.winTitle {
+    color: var(--color-win);
+}
+
+.loseTitle {
+    color: var(--color-lose);
+}
+
+.reason {
+    color: var(--color-text-secondary);
+    font-size: 1.1rem;
+    max-width: 400px;
+}
+
+.playAgainButton {
+    margin-top: var(--space-4);
+    background-color: var(--color-primary-dark);
+    color: var(--color-text-primary);
+    font-weight: 700;
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--border-radius-md);
+    font-size: 1.1rem;
+    transition: var(--transition-fast);
+    border: none;
+    cursor: pointer;
+}
+
+.playAgainButton:hover {
+    transform: scale(1.05);
+    background-color: var(--color-primary);
+}
