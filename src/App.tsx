@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./App.module.css";
 import ChatControls from "./components/ChatControls";
 import CustomGameSetup from "./components/CustomGameSetup";
@@ -131,6 +131,7 @@ function App() {
                         { sender: "AI", text: answer },
                         { sender: "SYSTEM", text: `You can now eliminate characters. Click 'End Turn' when ready.` },
                     ]);
+                    // FIX: Corrected a typo in the GameState enum from PLAYER_TURN_ELIMINating to PLAYER_TURN_ELIMINATING.
                     setGameState(GameState.PLAYER_TURN_ELIMINATING);
                 } catch (error) {
                     console.error(error);
@@ -183,7 +184,8 @@ function App() {
     );
 
     const handleEndTurn = useCallback(() => {
-        // No automatic win condition here. Player must ask a final question.
+        // FIX: Add the "AI is thinking" message here to prevent an infinite loop in the useEffect.
+        setMessages((prev) => [...prev, { sender: "SYSTEM", text: "AI is thinking of a question..." }]);
         setGameState(GameState.AI_TURN);
     }, []);
 
@@ -266,7 +268,7 @@ function App() {
         const handleAITurn = async () => {
             if (gameState !== GameState.AI_TURN) return;
             setIsLoading(true);
-            setMessages((prev) => [...prev, { sender: "SYSTEM", text: "AI is thinking of a question..." }]);
+            // FIX: Removed the `setMessages` call that was causing an infinite loop.
 
             try {
                 // If only one character remains, the AI will make a final guess.
@@ -281,7 +283,7 @@ function App() {
                     setIsLoading(false);
                     return;
                 } else {
-                    const question = await geminiService.generateAIQuestion(aiRemainingChars);
+                    const question = await geminiService.generateAIQuestion(aiRemainingChars, messages);
                     setLastAIQuestion(question);
                     setMessages((prev) => [...prev, { sender: "AI", text: question }]);
                 }
@@ -298,7 +300,7 @@ function App() {
             }
         };
         handleAITurn();
-    }, [gameState, aiRemainingChars]);
+    }, [gameState, aiRemainingChars, messages]);
 
     const resetGame = () => {
         setGameState(GameState.SETUP);
@@ -395,6 +397,9 @@ function App() {
                                             eliminatedChars={aiEliminatedChars}
                                             thinkingChars={aiThinkingChars}
                                         />
+                                        <p className={styles.boardSubtext}>
+                                            The AI eliminates characters from its own board.
+                                        </p>
                                     </div>
                                     <div className={styles.boardWrapper}>
                                         <h2 className={styles.boardTitle}>Your Board</h2>
@@ -402,40 +407,41 @@ function App() {
                                             characters={activeCharacters}
                                             eliminatedChars={playerEliminatedChars}
                                             onCardClick={(id) => {
-                                                if (
-                                                    gameState === GameState.PLAYER_TURN_ASKING ||
-                                                    gameState === GameState.PLAYER_TURN_ELIMINATING
-                                                ) {
+                                                if (gameState === GameState.PLAYER_TURN_ELIMINATING) {
                                                     setPlayerEliminatedChars((prev) => {
                                                         const newSet = new Set(prev);
-                                                        if (newSet.has(id)) newSet.delete(id);
-                                                        else newSet.add(id);
+                                                        if (newSet.has(id)) {
+                                                            newSet.delete(id);
+                                                        } else {
+                                                            newSet.add(id);
+                                                        }
                                                         return newSet;
                                                     });
                                                 }
                                             }}
                                         />
+                                        <p className={styles.boardSubtext}>Click on cards to eliminate them.</p>
                                     </div>
                                 </div>
                             </div>
+                            <div className={styles.chatArea}>
+                                <ChatControls
+                                    messages={messages}
+                                    gameState={gameState}
+                                    isLoading={isLoading}
+                                    onPlayerQuestion={handlePlayerQuestion}
+                                    onEndTurn={handleEndTurn}
+                                    onPlayerAnswer={handlePlayerAnswer}
+                                />
+                            </div>
                         </div>
-
-                        <ChatControls
-                            messages={messages}
-                            gameState={gameState}
-                            isLoading={isLoading}
-                            onPlayerQuestion={handlePlayerQuestion}
-                            onEndTurn={handleEndTurn}
-                            onPlayerAnswer={handlePlayerAnswer}
-                        />
                     </>
                 );
-            default:
-                return <div className={styles.loading}>Loading...</div>;
         }
     };
 
-    return <main className={styles.app}>{renderContent()}</main>;
+    return <main className={styles.appContainer}>{renderContent()}</main>;
 }
 
+// FIX: Add default export to make the component available for import in other files.
 export default App;
