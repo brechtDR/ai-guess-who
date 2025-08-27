@@ -35,15 +35,16 @@ function App() {
     const [defaultCharsWithBlobs, setDefaultCharsWithBlobs] = useState<Character[] | null>(null);
 
     useEffect(() => {
-        geminiService.initializeAI(
-            (status, message) => {
+        // FIX: The initializeAI function expects a single object argument. The call is updated to pass an object containing the onStatusChange and onProgress callbacks.
+        geminiService.initializeAI({
+            onStatusChange: (status, message) => {
                 setAiStatus(status);
                 if (message) setAiStatusMessage(message);
             },
-            (progress) => {
+            onProgress: (progress) => {
                 setDownloadProgress(progress);
             },
-        );
+        });
     }, []);
 
     useEffect(() => {
@@ -312,13 +313,14 @@ function App() {
         // Re-trigger AI check on reset if it failed
         if (aiStatus === AIStatus.ERROR || aiStatus === AIStatus.UNAVAILABLE) {
             setAiStatus(AIStatus.INITIALIZING);
-            geminiService.initializeAI(
-                (status, message) => {
+            // FIX: The initializeAI function was called with two arguments, but it expects a single object. This call is updated to pass an object containing the onStatusChange and onProgress callbacks, resolving the error.
+            geminiService.initializeAI({
+                onStatusChange: (status, message) => {
                     setAiStatus(status);
                     if (message) setAiStatusMessage(message);
                 },
-                (progress) => setDownloadProgress(progress),
-            );
+                onProgress: (progress) => setDownloadProgress(progress),
+            });
         }
     };
 

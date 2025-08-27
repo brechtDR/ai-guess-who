@@ -1,7 +1,4 @@
 import { AIStatus, type Character, type Message } from "../types";
-
-// Define interfaces for the on-device LanguageModel API.
-// These are based on the current browser implementations.
 interface LanguageModelSession {
     prompt(params: any): Promise<string>;
     destroy(): void;
@@ -22,8 +19,8 @@ declare global {
 }
 
 // Timeout configuration
-const GENERAL_PROMPT_TIMEOUT_MS = 15000; // Increased from 7s for more stability
-const ELIMINATION_PROMPT_TIMEOUT_MS = 20000; // For the more complex elimination task
+const GENERAL_PROMPT_TIMEOUT_MS = 15000;
+const ELIMINATION_PROMPT_TIMEOUT_MS = 20000;
 
 /**
  * Custom error for timeout operations.
@@ -69,10 +66,13 @@ class GeminiNanoService {
         return null;
     }
 
-    async initialize(
-        onStatusChange: (status: AIStatus, message?: string) => void,
-        onProgress?: (progress: number) => void,
-    ): Promise<void> {
+    // FIX: Updated to accept a single options object to match calls in App.tsx
+    async initialize(options: {
+        onStatusChange: (status: AIStatus, message?: string) => void;
+        onProgress?: (progress: number) => void;
+    }): Promise<void> {
+        const { onStatusChange, onProgress } = options;
+
         onStatusChange(AIStatus.INITIALIZING, "Initializing AI...");
         this.model = this.getModelEntryPoint();
 
@@ -196,36 +196,27 @@ class GeminiNanoService {
 
         const characterNames = characters.map((c) => c.name).join(", ");
 
-        const promptText = `You are an expert "Guess Who?" player. Your goal is to win by asking the smartest question about your opponent's secret character.
+        const promptText = `You are an expert "Guess Who?" player. Your goal is to win by asking the smartest possible yes/no question.
 
-**Characters Still in Play (${characters.length} total):**
-${characterNames}
+**Analyze the situation:**
+*   **Characters remaining (${characters.length}):** ${characterNames}
+*   **Conversation History:**
+${historyText || "No questions yet."}
 
-You are given images of these characters.
+**Your Mission:**
+Formulate a single question to ask me.
 
-**Conversation History:**
-${historyText}
+**Follow these rules precisely:**
+1.  **Examine the images:** Look at all remaining characters for shared or unique visual features (e.g., hair color, glasses, hats, jewelry, facial hair). Keep it to simple features that are easy to spot.
+2.  **Find the best split:** The ideal question is one where the 'Yes' and 'No' answers would each eliminate a significant number of characters. A 50/50 split is perfect.
+3.  **CRITICAL - Ask about existing features ONLY:** Do NOT ask a question about a feature if NO remaining character has it. For example, don't ask about a mustache if no one has one.
+4.  **CRITICAL - Be original:** Do NOT repeat a question that is already in the conversation history.
+5.  **Format your question correctly:**
+    *   Start with "Is your character...?" or "Does your character have...?".
+    *   The question must be about my *single* secret character.
 
-**Your Task:**
-Formulate a single, binary (yes/no) question that will eliminate the most characters possible, no matter the answer.
-
-**Winning Strategy:**
-1.  **Analyze Features:** Look at all characters for common and distinct visual features (hair color, glasses, hats, gender expression, etc.).
-2.  **Find the Best Split:** The best question is one that splits the remaining characters into two groups of roughly equal size. For example, if 8 characters are left, a question that applies to 4 of them is perfect.
-3.  **Go Broad First:** Ask about general features (e.g., "wearing a hat") before specific ones (e.g., "blue eyes").
-
-**CRITICAL RULES FOR YOUR QUESTION:**
-1.  **RELEVANCE:** Your question MUST be about a feature visible in AT LEAST ONE of the characters still in play. Do not ask about features (like a mustache or a red hat) if NO remaining character has that feature.
-2.  **DO NOT REPEAT QUESTIONS:** Do not ask a question that has already been asked in the conversation history. Be creative.
-3.  **Focus on a Single Character:** Your question MUST be about the opponent's SINGLE secret character.
-4.  **Correct Phrasing:** The question MUST start with "Is your character...?" or "Does your character have...?".
-5.  **ABSOLUTELY FORBIDDEN:** Do NOT ask questions about the group. Do NOT use words like "anyone", "any of", "do they".
-
-**Example of a GOOD question:** "Is your character wearing glasses?"
-**Example of a BAD question:** "Does anyone have blonde hair?"
-**Example of a BAD question:** "Is your character wearing a scarf?" (if NO remaining character has a scarf)
-
-Based on the strategy and rules above, analyze the images below and provide the single best question to ask. Your entire response MUST be ONLY the question itself.`;
+**Output:**
+Your entire response MUST be ONLY the question you've decided to ask. Do not add any other text.`;
 
         const promptContent: any[] = [{ type: "text", value: promptText }];
         for (const char of characters) {
@@ -243,29 +234,32 @@ Based on the strategy and rules above, analyze the images below and provide the 
         const session = await this.ensureSession();
         const characterData = characters.map((c) => ({ id: c.id, name: c.name }));
 
-        const promptText = `You are a "Guess Who?" game AI. Your task is to identify which characters remain valid based on a player's answer.
+        const promptText = `You are a "Guess Who?" game engine. Your only job is to identify which characters to KEEP based on a question and answer.
 
-The player answered "${playerAnswer}" to your question: "${question}"
+**INPUT:**
+1.  **Question Asked:** "${question}"
+2.  **Player's Answer:** "${playerAnswer}"
+3.  **Characters:** ${JSON.stringify(characterData)}
 
-Here are the characters currently in play:
-${JSON.stringify(characterData)}
+**YOUR TASK:**
+For each character, answer the question "${question}" with a "Yes" or "No" based on their image.
+Then, create a list of IDs for all characters where YOUR answer matches the Player's Answer ("${playerAnswer}").
 
-**Your Task:**
-Identify which of the characters from the list above MATCH the player's answer.
-- If the player said "Yes", you must identify all characters for whom the answer to the question would also be "Yes".
-- If the player said "No", you must identify all characters for whom the answer to the question would also be "No".
+**EXAMPLE:**
+*   Question: "Is the character wearing glasses?"
+*   Player's Answer: "Yes"
+*   Characters: [{id: "alex", name: "Alex"}(has glasses), {id: "bella", name: "Bella"}(no glasses)]
+*   Your thought process:
+    *   Alex: Does Alex have glasses? Yes. "Yes" matches the player's answer. KEEP.
+    *   Bella: Does Bella have glasses? No. "No" does not match the player's answer. DISCARD.
+*   Result: ["alex"]
 
-**Output Format:**
-Your response MUST be a valid JSON array of strings, where each string is the 'id' of a character to KEEP.
-Do NOT include any other text or explanations.
+**OUTPUT FORMAT:**
+*   You MUST respond with ONLY a valid JSON array of strings.
+*   The array must contain the 'id' for each character you decided to KEEP.
+*   Do not add any explanation.
 
-**Example:**
-Question: "Is your character wearing glasses?"
-Player Answer: "Yes"
-Characters in play: Alex (glasses), Bella (no glasses), Charlie (glasses)
-Correct Output: ["alex", "charlie"]
-
-Analyze the images below and provide the JSON array of IDs for the characters to KEEP.`;
+Based on the images below, generate the JSON array now.`;
 
         const promptContent: any[] = [{ type: "text", value: promptText }];
         for (const char of characters) {
@@ -278,11 +272,11 @@ Analyze the images below and provide the JSON array of IDs for the characters to
         try {
             const result = await promiseWithTimeout(session.prompt(prompt), ELIMINATION_PROMPT_TIMEOUT_MS);
 
-            // Sanitize the response to extract JSON
+            // Sanitize the response to extract JSON from markdown code blocks or raw text
             const jsonMatch = result.match(/\[.*?\]/s);
             if (!jsonMatch) {
                 console.warn("AI KEEP response was not valid JSON:", result);
-                return new Set<string>();
+                return new Set<string>(); // Return no eliminations
             }
 
             const keptIdsArray = JSON.parse(jsonMatch[0]);
@@ -292,14 +286,9 @@ Analyze the images below and provide the JSON array of IDs for the characters to
                 return new Set<string>();
             }
 
-            // Handle both ["alex"] and [{id: "alex"}] formats to be robust.
             const keptIds = new Set(
                 keptIdsArray
-                    .map((item: any) => {
-                        if (typeof item === "string") return item;
-                        if (typeof item === "object" && item !== null && typeof item.id === "string") return item.id;
-                        return null; // Invalid format
-                    })
+                    .map((item: any) => (typeof item === "string" ? item : null))
                     .filter((id): id is string => id !== null),
             );
 
@@ -313,8 +302,7 @@ Analyze the images below and provide the JSON array of IDs for the characters to
                 }
             }
 
-            // Safety check: Don't eliminate everyone if there are characters left to play.
-            // This happens if the AI returns an empty list of characters to keep.
+            // Safety check: Don't eliminate everyone if the AI made a mistake.
             if (eliminatedIds.size === characters.length && characters.length > 0) {
                 console.warn("AI logic would have eliminated all characters. Preventing this action.");
                 return new Set<string>();
@@ -330,10 +318,11 @@ Analyze the images below and provide the JSON array of IDs for the characters to
 }
 
 const service = new GeminiNanoService();
-export const initializeAI = (
-    onStatusChange: (status: AIStatus, message?: string) => void,
-    onProgress?: (progress: number) => void,
-) => service.initialize(onStatusChange, onProgress);
+
+export const initializeAI = (options: {
+    onStatusChange: (status: AIStatus, message?: string) => void;
+    onProgress?: (progress: number) => void;
+}) => service.initialize(options);
 
 export const loadBlobsForDefaultCharacters = (characters: Character[]) =>
     service.loadBlobsForDefaultCharacters(characters);
