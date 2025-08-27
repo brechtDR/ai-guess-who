@@ -9,9 +9,9 @@ import { type Character } from "./types";
 // ];
 
 export const DEFAULT_CHARACTERS: Character[] = [
-    { id: "alex", name: "Alex", image: "/images/unsplash/alex.jpg" },
-    { id: "bella", name: "Bella", image: "/images/unsplash/bella.jpg" },
-    { id: "charlie", name: "Charlie", image: "/images/unsplash/charlie.jpg" },
-    { id: "diana", name: "Diana", image: "/images/unsplash/diana.jpg" },
-    { id: "ethan", name: "Ethan", image: "/images/unsplash/ethan.jpg" },
+    { id: "alex", name: "Alex", image: "/ai-guess-who/images/unsplash/alex.jpg" },
+    { id: "bella", name: "Bella", image: "/ai-guess-who/images/unsplash/bella.jpg" },
+    { id: "charlie", name: "Charlie", image: "/ai-guess-who/images/unsplash/charlie.jpg" },
+    { id: "diana", name: "Diana", image: "/ai-guess-who/images/unsplash/diana.jpg" },
+    { id: "ethan", name: "Ethan", image: "/ai-guess-who/images/unsplash/ethan.jpg" },
 ];
