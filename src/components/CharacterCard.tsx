@@ -1,9 +1,6 @@
-
-import styles from "./CharacterCard.module.css";
-
 import React, { type ComponentPropsWithoutRef } from "react";
-
 import { type Character } from "../types";
+import styles from "./CharacterCard.module.css";
 
 type CharacterCardProps = Omit<ComponentPropsWithoutRef<"div">, "onClick"> & {
     character: Character;

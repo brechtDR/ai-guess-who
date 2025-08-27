@@ -1,4 +1,3 @@
-
 // This file is used to provide typing information to TypeScript
 // for assets that are not TypeScript or JavaScript files.
 

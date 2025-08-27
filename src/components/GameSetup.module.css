@@ -1,177 +1,177 @@
 .setupContainer {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-4);
-    animation: fadeIn 0.5s ease-out;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-height: 100vh;
+	padding: var(--space-4);
+	animation: fadeIn 0.5s ease-out;
 }
 
 .titleContainer {
-    text-align: center;
-    margin-bottom: 3rem;
-    max-width: 600px;
+	max-width: 600px;
+	margin-bottom: 3rem;
+	text-align: center;
 }
 
 .mainTitle {
-    font-size: 3rem;
-    font-weight: 800;
-    margin-bottom: var(--space-2);
-    background: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+	margin-bottom: var(--space-2);
+	background: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
+	-webkit-background-clip: text;
+	font-weight: 800;
+	font-size: 3rem;
+	-webkit-text-fill-color: transparent;
 }
 
 @media (min-width: 768px) {
-    .mainTitle {
-        font-size: 4rem;
-    }
+	.mainTitle {
+		font-size: 4rem;
+	}
 }
 
 .subtitle {
-    color: var(--color-text-secondary);
-    font-size: 1.25rem;
-    line-height: 1.5;
+	color: var(--color-text-secondary);
+	font-size: 1.25rem;
+	line-height: 1.5;
 }
 
 .statusContainer {
-    min-height: 80px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    max-width: 600px;
-    margin-bottom: var(--space-4);
-    gap: var(--space-4);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	max-width: 600px;
+	min-height: 80px;
+	margin-bottom: var(--space-4);
+	gap: var(--space-4);
 }
 
 .statusContainer svg {
-    width: 2.5rem;
-    height: 2.5rem;
-    color: var(--color-primary);
+	width: 2.5rem;
+	height: 2.5rem;
+	color: var(--color-primary);
 }
 
 .spinner {
-    animation: spin 1s linear infinite;
+	animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 .statusComplete svg {
-    color: var(--color-success);
+	color: var(--color-success);
 }
 
 .progressWrapper {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    margin-top: var(--space-2);
+	display: flex;
+	align-items: center;
+	width: 100%;
+	margin-top: var(--space-2);
+	gap: var(--space-4);
 }
 
 .progressBarContainer {
-    flex-grow: 1;
-    background-color: var(--color-surface-2);
-    border-radius: var(--border-radius-md);
-    height: 12px;
-    overflow: hidden;
+	flex-grow: 1;
+	height: 12px;
+	overflow: hidden;
+	border-radius: var(--border-radius-md);
+	background-color: var(--color-surface-2);
 }
 
 .progressBar {
-    width: 0%;
-    height: 100%;
-    background-color: var(--color-primary);
-    border-radius: var(--border-radius-md);
-    transition: width 0.3s ease-in-out;
+	width: 0%;
+	height: 100%;
+	border-radius: var(--border-radius-md);
+	background-color: var(--color-primary);
+	transition: width 0.3s ease-in-out;
 }
 
 .progressPercentage {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--color-text-secondary);
-    min-width: 40px;
-    text-align: right;
+	min-width: 40px;
+	color: var(--color-text-secondary);
+	font-weight: 500;
+	font-size: 0.9rem;
+	text-align: right;
 }
 
 .errorText {
-    color: var(--color-error);
-    background-color: rgba(239, 68, 68, 0.1);
-    padding: var(--space-3);
-    border-radius: var(--border-radius-md);
-    border: 1px solid var(--color-error);
-    width: 100%;
-    text-align: center;
-    font-size: 0.9rem;
+	width: 100%;
+	padding: var(--space-3);
+	border: 1px solid var(--color-error);
+	border-radius: var(--border-radius-md);
+	background-color: rgba(239, 68, 68, 0.1);
+	color: var(--color-error);
+	font-size: 0.9rem;
+	text-align: center;
 }
 
 .optionsGrid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-4);
-    max-width: 64rem;
-    width: 100%;
+	display: grid;
+	grid-template-columns: 1fr;
+	width: 100%;
+	max-width: 64rem;
+	gap: var(--space-4);
 }
 
 @media (min-width: 768px) {
-    .optionsGrid {
-        grid-template-columns: 1fr 1fr;
-        gap: var(--space-8);
-    }
+	.optionsGrid {
+		grid-template-columns: 1fr 1fr;
+		gap: var(--space-8);
+	}
 
-    .optionsGrid.hasThree {
-        grid-template-columns: 1fr 1fr 1fr;
-    }
+	.optionsGrid.hasThree {
+		grid-template-columns: 1fr 1fr 1fr;
+	}
 }
 
 .optionCard {
-    background-color: var(--color-surface-1);
-    border: 2px solid var(--color-surface-2);
-    border-radius: var(--border-radius-lg);
-    padding: var(--space-8);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    cursor: pointer;
-    transition: var(--transition-fast);
-    color: var(--color-text-primary);
-    font-family: inherit;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-8);
+	border: 2px solid var(--color-surface-2);
+	border-radius: var(--border-radius-lg);
+	background-color: var(--color-surface-1);
+	color: var(--color-text-primary);
+	font-family: inherit;
+	text-align: center;
+	cursor: pointer;
+	transition: var(--transition-fast);
 }
 
 .optionCard:hover:not(:disabled) {
-    border-color: var(--color-primary);
-    transform: translateY(-5px);
-    background-color: var(--color-surface-2);
+	transform: translateY(-5px);
+	border-color: var(--color-primary);
+	background-color: var(--color-surface-2);
 }
 
 .optionCard:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+	cursor: not-allowed;
+	opacity: 0.5;
 }
 
 .iconWrapper {
-    width: 4rem;
-    height: 4rem;
-    color: var(--color-primary);
-    margin-bottom: var(--space-4);
+	width: 4rem;
+	height: 4rem;
+	margin-bottom: var(--space-4);
+	color: var(--color-primary);
 }
 
 .cardTitle {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: var(--space-2);
+	margin-bottom: var(--space-2);
+	font-weight: 700;
+	font-size: 1.5rem;
 }
 
 .cardDescription {
-    color: var(--color-text-secondary);
+	color: var(--color-text-secondary);
 }

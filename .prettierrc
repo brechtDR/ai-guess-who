@@ -1,22 +1,22 @@
 {
-  "plugins": ["@trivago/prettier-plugin-sort-imports"],
-  "tabWidth": 4,
-  "printWidth": 120,
-  "trailingComma": "all",
-  "singleQuote": false,
-  "jsxSingleQuote": false,
-  "importOrder": ["style.css","^\\u0000", "^@/(.*)$", "^[./]"],
-  "overrides": [
-    {
-      "files": ["*.css", "*.scss"],
-      "options": {
-        "tabWidth": 4,
-        "useTabs": true,
-        "trailingComma": "all",
-        "plugins": ["prettier-plugin-css-order"],
-        "cssDeclarationSorterOrder": "smacss",
-        "singleQuote": false
-      }
-    }
-  ]
+    "plugins": ["@trivago/prettier-plugin-sort-imports"],
+    "tabWidth": 4,
+    "printWidth": 120,
+    "trailingComma": "all",
+    "singleQuote": false,
+    "jsxSingleQuote": false,
+    "importOrder": ["style.css", "^\\u0000", "^@/(.*)$", "^[./]"],
+    "overrides": [
+        {
+            "files": ["*.css", "*.scss"],
+            "options": {
+                "tabWidth": 4,
+                "useTabs": true,
+                "trailingComma": "all",
+                "plugins": ["prettier-plugin-css-order"],
+                "cssDeclarationSorterOrder": "smacss",
+                "singleQuote": false
+            }
+        }
+    ]
 }

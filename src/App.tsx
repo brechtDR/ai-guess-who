@@ -1,14 +1,12 @@
-import styles from "./App.module.css";
-
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-
+import styles from "./App.module.css";
 import ChatControls from "./components/ChatControls";
 import CustomGameSetup from "./components/CustomGameSetup";
 import EndGameDialog from "./components/EndGameDialog";
 import GameBoard from "./components/GameBoard";
 import GameSetup from "./components/GameSetup";
-import { ChevronDownIcon, ChevronUpIcon } from "./components/icons";
 import SecretCard from "./components/SecretCard";
+import { ChevronDownIcon, ChevronUpIcon } from "./components/icons";
 import { DEFAULT_CHARACTERS } from "./constants";
 import * as dbService from "./services/dbService";
 import * as geminiService from "./services/geminiService";
@@ -376,10 +374,7 @@ function App() {
                                     </div>
                                     <div className={styles.sidePanel}>
                                         <h2 className={styles.sidePanelTitleAi}>AI's Card</h2>
-                                        <SecretCard
-                                            character={aiSecret}
-                                            revealed={gameState === GameState.GAME_OVER}
-                                        />
+                                        <SecretCard character={aiSecret} revealed={gameState === GameState.GAME_OVER} />
                                     </div>
                                 </div>
 

@@ -1,6 +1,4 @@
-
 import { useCallback, useRef, useState } from "react";
-
 import * as geminiService from "../services/geminiService";
 
 type UseSpeechToTextOptions = {

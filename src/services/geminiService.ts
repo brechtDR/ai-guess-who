@@ -1,4 +1,3 @@
-
 import { AIStatus, type Character } from "../types";
 
 // Define interfaces for the on-device LanguageModel API.
@@ -199,7 +198,10 @@ Rules:
                 const prompt = [
                     {
                         role: "user",
-                        content: [{ type: "text", value: promptText }, { type: "image", value: char.imageBlob }],
+                        content: [
+                            { type: "text", value: promptText },
+                            { type: "image", value: char.imageBlob },
+                        ],
                     },
                 ];
                 try {
