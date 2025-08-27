@@ -1,10 +1,7 @@
-
-import styles from "./ChatControls.module.css";
-
 import React, { useEffect, useRef, useState } from "react";
-
 import { useSpeechToText } from "../hooks/useSpeechToText";
 import { GameState, type Message } from "../types";
+import styles from "./ChatControls.module.css";
 import { MicIcon, SendIcon, StopIcon } from "./icons";
 
 type ChatControlsProps = {

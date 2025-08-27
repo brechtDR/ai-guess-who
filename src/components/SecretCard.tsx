@@ -1,9 +1,6 @@
-
-import styles from "./SecretCard.module.css";
-
 import React from "react";
-
 import { type Character } from "../types";
+import styles from "./SecretCard.module.css";
 
 type SecretCardProps = {
     character: Character;

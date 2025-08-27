@@ -1,10 +1,7 @@
-
-import styles from "./GameBoard.module.css";
-
 import React from "react";
-
-import CharacterCard from "./CharacterCard";
 import { type Character } from "../types";
+import CharacterCard from "./CharacterCard";
+import styles from "./GameBoard.module.css";
 
 type GameBoardProps = {
     characters: Character[];
@@ -13,12 +10,7 @@ type GameBoardProps = {
     thinkingChars?: Set<string>;
 };
 
-function GameBoard({
-    characters,
-    eliminatedChars,
-    onCardClick = () => {},
-    thinkingChars = new Set(),
-}: GameBoardProps) {
+function GameBoard({ characters, eliminatedChars, onCardClick = () => {}, thinkingChars = new Set() }: GameBoardProps) {
     return (
         <div className={styles.boardContainer}>
             <div className={styles.boardGrid}>

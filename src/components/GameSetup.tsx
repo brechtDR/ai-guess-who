@@ -1,8 +1,6 @@
-import styles from "./GameSetup.module.css";
-
 import React, { type ComponentPropsWithoutRef, useEffect, useRef, useState } from "react";
-
 import { AIStatus } from "../types";
+import styles from "./GameSetup.module.css";
 import { CameraIcon, CheckCircleIcon, PlayAgainIcon, SpinnerIcon, UsersIcon } from "./icons";
 
 type SetupOptionCardProps = ComponentPropsWithoutRef<"button"> & {
@@ -33,15 +31,15 @@ type GameSetupProps = {
 };
 
 function GameSetup({
-                       onStartDefault,
-                       onStartCustom,
-                       onStartWithCustomSet,
-                       aiStatus,
-                       aiStatusMessage,
-                       downloadProgress,
-                       hasDefaultChars,
-                       hasCustomSet,
-                   }: GameSetupProps) {
+    onStartDefault,
+    onStartCustom,
+    onStartWithCustomSet,
+    aiStatus,
+    aiStatusMessage,
+    downloadProgress,
+    hasDefaultChars,
+    hasCustomSet,
+}: GameSetupProps) {
     const isReady = aiStatus === AIStatus.READY;
     const defaultGameDisabled = !isReady || !hasDefaultChars;
 
