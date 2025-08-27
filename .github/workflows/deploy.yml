@@ -1,5 +1,5 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+# Simple workflow for deploying a PNPM-based static site to GitHub Pages
+name: Deploy static content to Pages with PNPM
 
 on:
   # Runs on pushes targeting the default branch
@@ -31,23 +31,34 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9 # You can specify a version if needed
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'pnpm' # This is the crucial change for caching pnpm dependencies
+
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
+
       - name: Build
-        # This command runs 'vite build' as defined in your package.json
-        run: npm run build
+        # This command runs 'vite build' via the script in your package.json
+        run: pnpm build
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           # This should match the 'outDir' in your vite.config.ts
           path: './docs'
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
