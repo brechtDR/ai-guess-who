@@ -1,10 +1,7 @@
-
-import styles from "./CustomGameSetup.module.css";
-
 import { useCallback, useEffect, useRef, useState } from "react";
-
 import * as dbService from "../services/dbService";
 import { type Character } from "../types";
+import styles from "./CustomGameSetup.module.css";
 
 type CustomGameSetupProps = {
     onStartGame: (characters: Character[]) => void;

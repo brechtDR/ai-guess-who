@@ -239,11 +239,7 @@ Based on the strategy and rules above, analyze the images below and provide the 
         return result.trim().replace(/"/g, "");
     }
 
-    async getEliminations(
-        characters: Character[],
-        question: string,
-        playerAnswer: "Yes" | "No",
-    ): Promise<Set<string>> {
+    async getEliminations(characters: Character[], question: string, playerAnswer: "Yes" | "No"): Promise<Set<string>> {
         const session = await this.ensureSession();
         const characterData = characters.map((c) => ({ id: c.id, name: c.name }));
 
