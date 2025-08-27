@@ -1,10 +1,9 @@
-
 import styles from "./GameSetup.module.css";
 
-import React, { type ComponentPropsWithoutRef } from "react";
+import React, { type ComponentPropsWithoutRef, useEffect, useRef, useState } from "react";
 
 import { AIStatus } from "../types";
-import { CameraIcon, UsersIcon } from "./icons";
+import { CameraIcon, CheckCircleIcon, PlayAgainIcon, SpinnerIcon, UsersIcon } from "./icons";
 
 type SetupOptionCardProps = ComponentPropsWithoutRef<"button"> & {
     title: string;
@@ -25,33 +24,67 @@ function SetupOptionCard({ title, description, icon, ...props }: SetupOptionCard
 type GameSetupProps = {
     onStartDefault: () => void;
     onStartCustom: () => void;
+    onStartWithCustomSet: () => void;
     aiStatus: AIStatus;
     aiStatusMessage: string;
     downloadProgress: number | null;
     hasDefaultChars: boolean;
+    hasCustomSet: boolean;
 };
 
 function GameSetup({
-    onStartDefault,
-    onStartCustom,
-    aiStatus,
-    aiStatusMessage,
-    downloadProgress,
-    hasDefaultChars,
-}: GameSetupProps) {
+                       onStartDefault,
+                       onStartCustom,
+                       onStartWithCustomSet,
+                       aiStatus,
+                       aiStatusMessage,
+                       downloadProgress,
+                       hasDefaultChars,
+                       hasCustomSet,
+                   }: GameSetupProps) {
     const isReady = aiStatus === AIStatus.READY;
     const defaultGameDisabled = !isReady || !hasDefaultChars;
 
+    const [showComplete, setShowComplete] = useState(false);
+    const prevAiStatus = useRef(aiStatus);
+
+    useEffect(() => {
+        if (prevAiStatus.current === AIStatus.DOWNLOADING && aiStatus === AIStatus.READY) {
+            setShowComplete(true);
+            const timer = setTimeout(() => setShowComplete(false), 2000);
+            return () => clearTimeout(timer);
+        }
+        prevAiStatus.current = aiStatus;
+    }, [aiStatus]);
+
     const renderStatus = () => {
+        if (showComplete) {
+            return (
+                <div className={`${styles.statusContainer} ${styles.statusComplete}`}>
+                    <CheckCircleIcon />
+                    <p className={styles.subtitle}>AI Model Ready!</p>
+                </div>
+            );
+        }
+
         switch (aiStatus) {
             case AIStatus.INITIALIZING:
+                return (
+                    <div className={styles.statusContainer}>
+                        <SpinnerIcon className={styles.spinner} />
+                        <p className={styles.subtitle}>{aiStatusMessage}</p>
+                    </div>
+                );
             case AIStatus.DOWNLOADING:
                 return (
                     <div className={styles.statusContainer}>
                         <p className={styles.subtitle}>{aiStatusMessage}</p>
-                        {aiStatus === AIStatus.DOWNLOADING && downloadProgress !== null && (
-                            <div className={styles.progressBarContainer}>
-                                <div className={styles.progressBar} style={{ width: `${downloadProgress}%` }}></div>
+                        {downloadProgress !== null && (
+                            <div className={styles.progressWrapper}>
+                                <div className={styles.progressBarContainer}>
+                                    <div className={styles.progressBar} style={{ width: `${downloadProgress}%` }}></div>
+                                </div>
+                                <span className={styles.progressPercentage}>{Math.floor(downloadProgress)}%</span>
                             </div>
                         )}
                     </div>
@@ -64,7 +97,12 @@ function GameSetup({
                     </div>
                 );
             case AIStatus.READY:
-                return !hasDefaultChars ? <p className={styles.subtitle}>Loading character data...</p> : null;
+                return !hasDefaultChars ? (
+                    <div className={styles.statusContainer}>
+                        <SpinnerIcon className={styles.spinner} />
+                        <p className={styles.subtitle}>Loading character data...</p>
+                    </div>
+                ) : null;
             default:
                 return null;
         }
@@ -79,7 +117,7 @@ function GameSetup({
 
             {renderStatus()}
 
-            <div className={styles.optionsGrid}>
+            <div className={`${styles.optionsGrid} ${hasCustomSet ? styles.hasThree : ""}`}>
                 <SetupOptionCard
                     title="Play Default Game"
                     description="Jump right in with a pre-defined set of 5 characters."
@@ -87,6 +125,15 @@ function GameSetup({
                     onClick={onStartDefault}
                     disabled={defaultGameDisabled}
                 />
+                {hasCustomSet && (
+                    <SetupOptionCard
+                        title="Play With Custom Set"
+                        description="Use the last set of characters you created."
+                        icon={<PlayAgainIcon />}
+                        onClick={onStartWithCustomSet}
+                        disabled={!isReady}
+                    />
+                )}
                 <SetupOptionCard
                     title="Create Custom Game"
                     description="Use your camera to create your own set of 5 characters."

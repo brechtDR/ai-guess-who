@@ -1,13 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./App.module.css";
+
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+
 import ChatControls from "./components/ChatControls";
 import CustomGameSetup from "./components/CustomGameSetup";
 import EndGameDialog from "./components/EndGameDialog";
 import GameBoard from "./components/GameBoard";
 import GameSetup from "./components/GameSetup";
-import SecretCard from "./components/SecretCard";
 import { ChevronDownIcon, ChevronUpIcon } from "./components/icons";
+import SecretCard from "./components/SecretCard";
 import { DEFAULT_CHARACTERS } from "./constants";
+import * as dbService from "./services/dbService";
 import * as geminiService from "./services/geminiService";
 import { AIStatus, GameState, type Character, type GameWinner, type Message } from "./types";
 
@@ -24,6 +27,7 @@ function App() {
     const [winReason, setWinReason] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [isSecretPanelVisible, setSecretPanelVisible] = useState(true);
+    const [hasCustomSet, setHasCustomSet] = useState(false);
 
     // AI State
     const [aiStatus, setAiStatus] = useState<AIStatus>(AIStatus.INITIALIZING);
@@ -54,6 +58,13 @@ function App() {
         loadData();
     }, [aiStatus, defaultCharsWithBlobs]);
 
+    useEffect(() => {
+        // Check for a saved custom game when returning to the setup screen
+        if (gameState === GameState.SETUP) {
+            dbService.hasCustomCharacters().then(setHasCustomSet);
+        }
+    }, [gameState]);
+
     const startGame = useCallback((characterSet: Character[]) => {
         if (characterSet.some((c) => !c.imageBlob)) {
             setAiStatus(AIStatus.ERROR);
@@ -82,15 +93,31 @@ function App() {
         console.log("%c[DEBUG] AI Secret Character:", "color: #f59e0b; font-weight: bold;", aSecret.name);
 
         setMessages([
-            {
-                sender: "SYSTEM",
-                text: `New game started. You drew ${pSecret.name}. It's your turn to ask a question. To make a final guess, write: Is your character [name]?"\`,`,
-            },
+            { sender: "SYSTEM", text: `New game started. You drew ${pSecret.name}. It's your turn to ask a question.` },
         ]);
         setWinner(null);
         setWinReason("");
         setGameState(GameState.PLAYER_TURN_ASKING);
     }, []);
+
+    const handleStartWithCustomSet = async () => {
+        setIsLoading(true);
+        try {
+            const customChars = await dbService.loadCustomCharacters();
+            if (customChars && customChars.length > 0) {
+                startGame(customChars);
+            } else {
+                // Should not happen if button is visible, but handle defensively
+                setHasCustomSet(false);
+                setMessages([{ sender: "SYSTEM", text: "Could not load custom character set." }]);
+            }
+        } catch (error) {
+            console.error("Failed to load custom characters:", error);
+            setMessages([{ sender: "SYSTEM", text: "Error loading custom characters." }]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handlePlayerQuestion = useCallback(
         async (question: string) => {
@@ -98,31 +125,7 @@ function App() {
             setIsLoading(true);
             setMessages((prev) => [...prev, { sender: "PLAYER", text: question }]);
 
-            // Check if the player is making a final guess
-            const finalGuessRegex = /^(?:is it|is the character|is your? character)\s+(.*?)\??$/i;
-            const guessMatch = question.trim().match(finalGuessRegex);
-
-            if (guessMatch) {
-                const guessedName = guessMatch[1].trim();
-                if (guessedName.toLowerCase() === aiSecret.name.toLowerCase()) {
-                    setMessages((prev) => [...prev, { sender: "AI", text: `Yes, it is ${aiSecret.name}!` }]);
-                    setWinner("PLAYER");
-                    setWinReason(`You correctly guessed the character was ${aiSecret.name}.`);
-                    setGameState(GameState.GAME_OVER);
-                } else {
-                    setMessages((prev) => [
-                        ...prev,
-                        { sender: "AI", text: `No, it is not ${guessedName}.` },
-                        {
-                            sender: "SYSTEM",
-                            text: `You guessed incorrectly! The secret character was ${aiSecret.name}.`,
-                        },
-                    ]);
-                    setWinner("AI");
-                    setWinReason(`You guessed incorrectly. The secret character was ${aiSecret.name}.`);
-                    setGameState(GameState.GAME_OVER);
-                }
-            } else {
+            const handleAsNormalQuestion = async () => {
                 try {
                     const answer = await geminiService.getAnswerToPlayerQuestion(aiSecret, question);
                     setMessages((prev) => [
@@ -138,10 +141,47 @@ function App() {
                         { sender: "SYSTEM", text: "Sorry, I had trouble answering. Please try again." },
                     ]);
                 }
+            };
+
+            // Check if the player is making a final guess
+            const finalGuessRegex = /^(?:is it|is the character|is your? character)\s+(.*?)\??$/i;
+            const guessMatch = question.trim().match(finalGuessRegex);
+
+            if (guessMatch) {
+                const guessedName = guessMatch[1].trim();
+                const isActualGuess = activeCharacters.some(
+                    (char) => char.name.toLowerCase() === guessedName.toLowerCase(),
+                );
+
+                if (isActualGuess) {
+                    if (guessedName.toLowerCase() === aiSecret.name.toLowerCase()) {
+                        setMessages((prev) => [...prev, { sender: "AI", text: `Yes, it is ${aiSecret.name}!` }]);
+                        setWinner("PLAYER");
+                        setWinReason(`You correctly guessed the character was ${aiSecret.name}.`);
+                        setGameState(GameState.GAME_OVER);
+                    } else {
+                        setMessages((prev) => [
+                            ...prev,
+                            { sender: "AI", text: `No, it is not ${guessedName}.` },
+                            {
+                                sender: "SYSTEM",
+                                text: `You guessed incorrectly! The secret character was ${aiSecret.name}.`,
+                            },
+                        ]);
+                        setWinner("AI");
+                        setWinReason(`You guessed incorrectly. The secret character was ${aiSecret.name}.`);
+                        setGameState(GameState.GAME_OVER);
+                    }
+                } else {
+                    // It's a question like "Is your character male?", not a guess.
+                    await handleAsNormalQuestion();
+                }
+            } else {
+                await handleAsNormalQuestion();
             }
             setIsLoading(false);
         },
-        [aiSecret],
+        [aiSecret, activeCharacters],
     );
 
     const handleEndTurn = useCallback(() => {
@@ -155,18 +195,28 @@ function App() {
             setMessages((prev) => [...prev, { sender: "PLAYER", text: answer }]);
 
             // Handle AI's final guess
-            if (lastAIQuestion.toLowerCase().includes("is your character")) {
-                if (answer === "Yes") {
-                    setWinner("AI");
-                    setWinReason(`It correctly guessed your character was ${playerSecret?.name}.`);
-                    setGameState(GameState.GAME_OVER);
-                } else {
-                    // AI guessed wrong, player wins.
-                    setWinner("PLAYER");
-                    setWinReason(`The AI guessed incorrectly! You win!`);
-                    setGameState(GameState.GAME_OVER);
+            const finalGuessRegex = /^(?:is it|is the character|is your? character)\s+(.*?)\??$/i;
+            const guessMatch = lastAIQuestion.trim().match(finalGuessRegex);
+
+            if (guessMatch) {
+                const guessedName = guessMatch[1].trim();
+                const isActualGuess = aiRemainingChars.some(
+                    (char) => char.name.toLowerCase() === guessedName.toLowerCase(),
+                );
+
+                if (isActualGuess) {
+                    if (answer === "Yes") {
+                        setWinner("AI");
+                        setWinReason(`It correctly guessed your character was ${playerSecret?.name}.`);
+                        setGameState(GameState.GAME_OVER);
+                    } else {
+                        // AI guessed wrong, player wins.
+                        setWinner("PLAYER");
+                        setWinReason(`The AI guessed incorrectly! You win!`);
+                        setGameState(GameState.GAME_OVER);
+                    }
+                    return;
                 }
-                return;
             }
 
             // Regular turn, process eliminations
@@ -221,10 +271,8 @@ function App() {
             setMessages((prev) => [...prev, { sender: "SYSTEM", text: "AI is thinking of a question..." }]);
 
             try {
-                // If 2 or fewer characters remain, the AI will make a final guess.
-                if (aiRemainingChars.length <= 2 && aiRemainingChars.length > 0) {
-                    // In a real game, the AI would guess one of the remaining. We'll simplify and pick the first.
-                    // For a better game, it might ask about one, and if "No", know the other.
+                // If only one character remains, the AI will make a final guess.
+                if (aiRemainingChars.length === 1) {
                     const guess = `Is your character ${aiRemainingChars[0].name}?`;
                     setLastAIQuestion(guess);
                     setMessages((prev) => [...prev, { sender: "AI", text: guess }]);
@@ -286,10 +334,12 @@ function App() {
                     <GameSetup
                         onStartDefault={() => defaultCharsWithBlobs && startGame(defaultCharsWithBlobs)}
                         onStartCustom={() => setGameState(GameState.CUSTOM_SETUP)}
+                        onStartWithCustomSet={handleStartWithCustomSet}
                         aiStatus={aiStatus}
                         aiStatusMessage={aiStatusMessage}
                         downloadProgress={downloadProgress}
                         hasDefaultChars={!!defaultCharsWithBlobs}
+                        hasCustomSet={hasCustomSet}
                     />
                 );
             case GameState.CUSTOM_SETUP:
@@ -326,7 +376,10 @@ function App() {
                                     </div>
                                     <div className={styles.sidePanel}>
                                         <h2 className={styles.sidePanelTitleAi}>AI's Card</h2>
-                                        <SecretCard character={aiSecret} revealed={gameState === GameState.GAME_OVER} />
+                                        <SecretCard
+                                            character={aiSecret}
+                                            revealed={gameState === GameState.GAME_OVER}
+                                        />
                                     </div>
                                 </div>
 

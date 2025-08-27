@@ -1,3 +1,4 @@
+
 import { AIStatus, type Character } from "../types";
 
 // Define interfaces for the on-device LanguageModel API.
@@ -21,7 +22,7 @@ declare global {
     }
 }
 
-const DEDUCTION_TIMEOUT_MS = 7000;
+const DEDUCTION_TIMEOUT_MS = 5000;
 
 class GeminiNanoService {
     private session: LanguageModelSession | null = null;
@@ -160,6 +161,7 @@ Here's the winning strategy:
 2. For each potential question (e.g., "Is the person wearing a hat?"), count how many characters would be a "Yes" and how many would be a "No".
 3. The best question is the one that splits the group most evenly. For example, if there are 8 characters left, a question that results in 4 "Yes" and 4 "No" answers is perfect. A question that results in 1 "Yes" and 7 "No" is a poor choice.
 4. Ask a broad question first. Avoid getting too specific too early (e.g., don't ask about "blue eyes" if you can ask about "wearing glasses").
+5. IMPORTANT: Your question must be about a visual attribute, not a character's name. Do not ask "Is the character Alex?". Ask about features like "Does the character have blonde hair?".
 
 Based on this strategy and the images below, formulate the single best question to ask. Your entire response MUST be ONLY the question itself.`;
 
@@ -197,10 +199,7 @@ Rules:
                 const prompt = [
                     {
                         role: "user",
-                        content: [
-                            { type: "text", value: promptText },
-                            { type: "image", value: char.imageBlob },
-                        ],
+                        content: [{ type: "text", value: promptText }, { type: "image", value: char.imageBlob }],
                     },
                 ];
                 try {

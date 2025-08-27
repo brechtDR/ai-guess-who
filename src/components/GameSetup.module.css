@@ -1,4 +1,3 @@
-
 .setupContainer {
     min-height: 100vh;
     display: flex;
@@ -45,14 +44,45 @@
     width: 100%;
     max-width: 600px;
     margin-bottom: var(--space-4);
+    gap: var(--space-4);
+}
+
+.statusContainer svg {
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--color-primary);
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.statusComplete svg {
+    color: var(--color-success);
+}
+
+.progressWrapper {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-top: var(--space-2);
 }
 
 .progressBarContainer {
-    width: 100%;
+    flex-grow: 1;
     background-color: var(--color-surface-2);
     border-radius: var(--border-radius-md);
-    height: 8px;
-    margin-top: var(--space-4);
+    height: 12px;
     overflow: hidden;
 }
 
@@ -62,6 +92,14 @@
     background-color: var(--color-primary);
     border-radius: var(--border-radius-md);
     transition: width 0.3s ease-in-out;
+}
+
+.progressPercentage {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    min-width: 40px;
+    text-align: right;
 }
 
 .errorText {
@@ -78,14 +116,19 @@
 .optionsGrid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--space-8);
-    max-width: 56rem; /* max-w-4xl */
+    gap: var(--space-4);
+    max-width: 64rem;
     width: 100%;
 }
 
 @media (min-width: 768px) {
     .optionsGrid {
         grid-template-columns: 1fr 1fr;
+        gap: var(--space-8);
+    }
+
+    .optionsGrid.hasThree {
+        grid-template-columns: 1fr 1fr 1fr;
     }
 }
 
@@ -117,14 +160,14 @@
 }
 
 .iconWrapper {
-    width: 4rem; /* w-16 */
-    height: 4rem; /* h-16 */
+    width: 4rem;
+    height: 4rem;
     color: var(--color-primary);
     margin-bottom: var(--space-4);
 }
 
 .cardTitle {
-    font-size: 1.5rem; /* text-2xl */
+    font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: var(--space-2);
 }

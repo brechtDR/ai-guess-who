@@ -1,8 +1,8 @@
-
 import styles from "./CustomGameSetup.module.css";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
+import * as dbService from "../services/dbService";
 import { type Character } from "../types";
 
 type CustomGameSetupProps = {
@@ -83,8 +83,14 @@ function CustomGameSetup({ onStartGame, onBack }: CustomGameSetupProps) {
         );
     };
 
-    const handleStartGame = () => {
+    const handleStartGame = async () => {
         cleanupCamera();
+        try {
+            await dbService.saveCustomCharacters(characters);
+        } catch (e) {
+            console.error("Failed to save custom characters", e);
+            // Non-critical error, so we can still proceed with the game
+        }
         onStartGame(characters);
     };
 
