@@ -1,7 +1,10 @@
+
+import styles from "./CustomGameSetup.module.css";
+
 import { useCallback, useEffect, useRef, useState } from "react";
+
 import * as dbService from "../services/dbService";
 import { type Character } from "../types";
-import styles from "./CustomGameSetup.module.css";
 
 type CustomGameSetupProps = {
     onStartGame: (characters: Character[]) => void;
@@ -44,11 +47,22 @@ function CustomGameSetup({ onStartGame, onBack }: CustomGameSetupProps) {
 
         const video = videoRef.current;
         const canvas = canvasRef.current;
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
+        const MAX_DIMENSION = 512;
+        const { videoWidth, videoHeight } = video;
+        const aspectRatio = videoWidth / videoHeight;
+
+        if (videoWidth > videoHeight) {
+            canvas.width = MAX_DIMENSION;
+            canvas.height = MAX_DIMENSION / aspectRatio;
+        } else {
+            canvas.height = MAX_DIMENSION;
+            canvas.width = MAX_DIMENSION * aspectRatio;
+        }
+
+        // Flip the image horizontally for a mirror effect
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -56,17 +70,21 @@ function CustomGameSetup({ onStartGame, onBack }: CustomGameSetupProps) {
         const personName = prompt(`Enter a name for this person:`, `Person ${characters.length + 1}`);
         if (!personName) return;
 
-        canvas.toBlob((blob) => {
-            if (!blob) return;
-            const imageUrl = URL.createObjectURL(blob);
-            const newChar: Character = {
-                id: `custom_${Date.now()}`,
-                name: personName,
-                image: imageUrl,
-                imageBlob: blob,
-            };
-            setCharacters((prev) => [...prev, newChar]);
-        }, "image/jpeg");
+        canvas.toBlob(
+            (blob) => {
+                if (!blob) return;
+                const imageUrl = URL.createObjectURL(blob);
+                const newChar: Character = {
+                    id: `custom_${Date.now()}`,
+                    name: personName,
+                    image: imageUrl,
+                    imageBlob: blob,
+                };
+                setCharacters((prev) => [...prev, newChar]);
+            },
+            "image/jpeg",
+            0.9,
+        );
     };
 
     const removeCharacter = (id: string) => {
