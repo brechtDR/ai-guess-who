@@ -125,7 +125,7 @@ function GameSetup({
                 />
                 {hasCustomSet && (
                     <SetupOptionCard
-                        title="Play With Custom Set"
+                        title="Replay Custom"
                         description="Use the last set of characters you created."
                         icon={<PlayAgainIcon />}
                         onClick={onStartWithCustomSet}
