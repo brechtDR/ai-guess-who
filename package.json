@@ -4,6 +4,7 @@
     "description": "A modern take on the classic 'Guess Who?' game where you play against a powerful AI.",
     "scripts": {
         "dev": "vite",
+        "build": "vite build",
         "format": "prettier --write ."
     },
     "dependencies": {
