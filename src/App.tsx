@@ -35,7 +35,6 @@ function App() {
     const [defaultCharsWithBlobs, setDefaultCharsWithBlobs] = useState<Character[] | null>(null);
 
     useEffect(() => {
-        // FIX: The initializeAI function expects a single object argument. The call is updated to pass an object containing the onStatusChange and onProgress callbacks.
         geminiService.initializeAI({
             onStatusChange: (status, message) => {
                 setAiStatus(status);
@@ -64,15 +63,28 @@ function App() {
         }
     }, [gameState]);
 
-    const startGame = useCallback((characterSet: Character[]) => {
+    const startGame = useCallback(async (characterSet: Character[]) => {
         if (characterSet.some((c) => !c.imageBlob)) {
             setAiStatus(AIStatus.ERROR);
             setAiStatusMessage(
                 "Cannot start game: Some character images are missing. Please try again or use the default set.",
             );
             setGameState(GameState.SETUP);
-            return;
+            throw new Error("Missing character image blobs.");
         }
+
+        try {
+            await geminiService.startNewGameSession();
+        } catch (error) {
+            console.error("Failed to start AI game session:", error);
+            setAiStatus(AIStatus.ERROR);
+            setAiStatusMessage(
+                error instanceof Error ? error.message : "Failed to start AI game session. Please try again.",
+            );
+            setGameState(GameState.SETUP);
+            throw error; // Re-throw to be caught by handlers
+        }
+
         setActiveCharacters(characterSet);
         setAiRemainingChars(characterSet);
         setPlayerEliminatedChars(new Set());
@@ -99,20 +111,37 @@ function App() {
         setGameState(GameState.PLAYER_TURN_ASKING);
     }, []);
 
+    const handleStartDefault = async () => {
+        if (!defaultCharsWithBlobs) return;
+        setIsLoading(true);
+        try {
+            await startGame(defaultCharsWithBlobs);
+        } catch (e) {
+            // Error is handled and displayed by startGame
+        } finally {
+            // If startGame fails, we remain on the setup screen, so loading must be stopped.
+            // If it succeeds, the component unmounts and this state change is benign.
+            setIsLoading(false);
+        }
+    };
+
     const handleStartWithCustomSet = async () => {
         setIsLoading(true);
         try {
             const customChars = await dbService.loadCustomCharacters();
             if (customChars && customChars.length > 0) {
-                startGame(customChars);
+                await startGame(customChars);
             } else {
                 // Should not happen if button is visible, but handle defensively
                 setHasCustomSet(false);
                 setMessages([{ sender: "SYSTEM", text: "Could not load custom character set." }]);
             }
         } catch (error) {
-            console.error("Failed to load custom characters:", error);
-            setMessages([{ sender: "SYSTEM", text: "Error loading custom characters." }]);
+            console.error("Failed to load or start custom game:", error);
+            // Don't show a generic message if startGame already showed a specific AI error
+            if (!(error instanceof Error && error.message.includes("AI"))) {
+                setMessages([{ sender: "SYSTEM", text: "Error loading custom characters." }]);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -132,7 +161,6 @@ function App() {
                         { sender: "AI", text: answer },
                         { sender: "SYSTEM", text: `You can now eliminate characters. Click 'End Turn' when ready.` },
                     ]);
-                    // FIX: Corrected a typo in the GameState enum from PLAYER_TURN_ELIMINating to PLAYER_TURN_ELIMINATING.
                     setGameState(GameState.PLAYER_TURN_ELIMINATING);
                 } catch (error) {
                     console.error(error);
@@ -185,7 +213,6 @@ function App() {
     );
 
     const handleEndTurn = useCallback(() => {
-        // FIX: Add the "AI is thinking" message here to prevent an infinite loop in the useEffect.
         setMessages((prev) => [...prev, { sender: "SYSTEM", text: "AI is thinking of a question..." }]);
         setGameState(GameState.AI_TURN);
     }, []);
@@ -269,7 +296,6 @@ function App() {
         const handleAITurn = async () => {
             if (gameState !== GameState.AI_TURN) return;
             setIsLoading(true);
-            // FIX: Removed the `setMessages` call that was causing an infinite loop.
 
             try {
                 // If only one character remains, the AI will make a final guess.
@@ -313,7 +339,6 @@ function App() {
         // Re-trigger AI check on reset if it failed
         if (aiStatus === AIStatus.ERROR || aiStatus === AIStatus.UNAVAILABLE) {
             setAiStatus(AIStatus.INITIALIZING);
-            // FIX: The initializeAI function was called with two arguments, but it expects a single object. This call is updated to pass an object containing the onStatusChange and onProgress callbacks, resolving the error.
             geminiService.initializeAI({
                 onStatusChange: (status, message) => {
                     setAiStatus(status);
@@ -334,7 +359,7 @@ function App() {
             case GameState.SETUP:
                 return (
                     <GameSetup
-                        onStartDefault={() => defaultCharsWithBlobs && startGame(defaultCharsWithBlobs)}
+                        onStartDefault={handleStartDefault}
                         onStartCustom={() => setGameState(GameState.CUSTOM_SETUP)}
                         onStartWithCustomSet={handleStartWithCustomSet}
                         aiStatus={aiStatus}
@@ -342,6 +367,7 @@ function App() {
                         downloadProgress={downloadProgress}
                         hasDefaultChars={!!defaultCharsWithBlobs}
                         hasCustomSet={hasCustomSet}
+                        isLoading={isLoading}
                     />
                 );
             case GameState.CUSTOM_SETUP:
@@ -445,5 +471,4 @@ function App() {
     return <main className={styles.appContainer}>{renderContent()}</main>;
 }
 
-// FIX: Add default export to make the component available for import in other files.
 export default App;

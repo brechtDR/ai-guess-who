@@ -1,4 +1,3 @@
-import React from "react";
 import { type Character } from "../types";
 import CharacterCard from "./CharacterCard";
 import styles from "./GameBoard.module.css";

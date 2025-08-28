@@ -28,6 +28,7 @@ type GameSetupProps = {
     downloadProgress: number | null;
     hasDefaultChars: boolean;
     hasCustomSet: boolean;
+    isLoading: boolean;
 };
 
 function GameSetup({
@@ -39,9 +40,11 @@ function GameSetup({
     downloadProgress,
     hasDefaultChars,
     hasCustomSet,
+    isLoading,
 }: GameSetupProps) {
     const isReady = aiStatus === AIStatus.READY;
-    const defaultGameDisabled = !isReady || !hasDefaultChars;
+    const defaultGameDisabled = !isReady || !hasDefaultChars || isLoading;
+    const customGameDisabled = !isReady || isLoading;
 
     const [showComplete, setShowComplete] = useState(false);
     const prevAiStatus = useRef(aiStatus);
@@ -125,11 +128,11 @@ function GameSetup({
                 />
                 {hasCustomSet && (
                     <SetupOptionCard
-                        title="Replay Custom"
+                        title="Play With Custom Set"
                         description="Use the last set of characters you created."
                         icon={<PlayAgainIcon />}
                         onClick={onStartWithCustomSet}
-                        disabled={!isReady}
+                        disabled={customGameDisabled}
                     />
                 )}
                 <SetupOptionCard
@@ -137,7 +140,7 @@ function GameSetup({
                     description="Use your camera to create your own set of 5 characters."
                     icon={<CameraIcon />}
                     onClick={onStartCustom}
-                    disabled={!isReady}
+                    disabled={customGameDisabled}
                 />
             </div>
         </div>
