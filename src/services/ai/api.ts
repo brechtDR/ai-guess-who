@@ -2,12 +2,23 @@
  * @file Contains the core functions for interacting with the AI model for game logic.
  */
 import { type Character, type Message } from "../../types";
-import { getAIQuestionPrompt, getEliminationsPrompt } from "../prompts";
+import {
+    getAIQuestionPrompt,
+    getAnswerToPlayerQuestionPrompt,
+    getEliminationsPrompt,
+    getSystemPrompt,
+} from "../prompts";
 import { getSession } from "./session";
 import { promiseWithTimeout } from "./timeout";
 
 const GENERAL_PROMPT_TIMEOUT_MS = 30000;
 const ELIMINATION_PROMPT_TIMEOUT_MS = 30000;
+
+type EliminationAnalysisResult = {
+    id: string;
+    name: string;
+    has_feature: boolean;
+};
 
 /**
  * Transcribes an audio blob into a single-sentence question using the AI model.
@@ -41,25 +52,28 @@ export async function getAnswerToPlayerQuestion(character: Character, question: 
         throw new Error(`Image blob for ${character.name} is missing.`);
     }
 
+    const promptText = getAnswerToPlayerQuestionPrompt(question);
     const prompt = [
         {
             role: "user",
             content: [
                 { type: "image", value: character.imageBlob },
-                {
-                    type: "text",
-                    value: `You are a "Guess Who" player. Look ONLY at the image. The user asked a question. Your entire response MUST be either the single word "Yes" or the single word "No". User's question: "${question}"`,
-                },
+                { type: "text", value: promptText },
             ],
         },
     ];
 
-    const result = await promiseWithTimeout(session.prompt(prompt), GENERAL_PROMPT_TIMEOUT_MS);
-    return result.toLowerCase().includes("yes") ? "Yes" : "No";
+    const schema = { type: "boolean" };
+    const result = await promiseWithTimeout(
+        session.prompt(prompt, { responseConstraint: schema }),
+        GENERAL_PROMPT_TIMEOUT_MS,
+    );
+    return JSON.parse(result) ? "Yes" : "No";
 }
 
 /**
  * Generates a strategic question for the AI to ask the player, based on the remaining characters.
+ * This function now builds a structured, multi-turn conversation history for the AI.
  * @param characters The list of remaining possible characters.
  * @param messages The conversation history.
  * @returns A promise that resolves to the AI's generated question.
@@ -67,22 +81,42 @@ export async function getAnswerToPlayerQuestion(character: Character, question: 
 export async function generateAIQuestion(characters: Character[], messages: Message[]): Promise<string> {
     const session = await getSession();
 
-    const promptText = getAIQuestionPrompt(characters, messages);
+    const prompt: any[] = [];
 
-    const promptContent: any[] = [{ type: "text", value: promptText }];
+    // Convert the game's message log into a structured history for the AI model.
+    messages
+        .filter((msg) => msg.sender === "PLAYER" || msg.sender === "AI")
+        .forEach((msg) => {
+            prompt.push({
+                role: msg.sender === "PLAYER" ? "user" : "assistant",
+                content: [{ type: "text", value: msg.text }],
+            });
+        });
+
+    // Create the final user prompt for this turn, combining the system prompt (core strategy)
+    // and the turn-specific instructions.
+    const systemPrompt = getSystemPrompt();
+    const turnPrompt = getAIQuestionPrompt(characters);
+    // FIX: Explicitly type userContent as any[] to avoid a type inference issue where
+    // TypeScript incorrectly flags a Blob as unassignable to a string. This pattern
+    // is consistent with the getEliminations function.
+    const userContent: any[] = [{ type: "text", value: `${systemPrompt}\n\n${turnPrompt}` }];
+
+    // Add all remaining character images for analysis.
     for (const char of characters) {
         if (char.imageBlob) {
-            promptContent.push({ type: "image", value: char.imageBlob });
+            userContent.push({ type: "image", value: char.imageBlob });
         }
     }
+    prompt.push({ role: "user", content: userContent });
 
-    const prompt = [{ role: "user", content: promptContent }];
     const result = await promiseWithTimeout(session.prompt(prompt), GENERAL_PROMPT_TIMEOUT_MS);
     return result.trim().replace(/"/g, "");
 }
 
 /**
- * Determines which characters the AI should eliminate based on the player's answer to its question.
+ * Determines which characters the AI should eliminate. This function now separates AI-powered
+ * visual analysis from deterministic, client-side logical deduction.
  * @param characters The list of currently available characters.
  * @param question The question the AI asked.
  * @param playerAnswer The player's "Yes" or "No" response.
@@ -95,8 +129,9 @@ export async function getEliminations(
 ): Promise<Set<string>> {
     const session = await getSession();
 
-    const promptText = getEliminationsPrompt(question, playerAnswer, characters);
-
+    // Step 1: Use the AI for visual analysis only.
+    // The AI's sole job is to determine if each character has the feature from the question.
+    const promptText = getEliminationsPrompt(question, characters);
     const promptContent: any[] = [{ type: "text", value: promptText }];
     for (const char of characters) {
         if (char.imageBlob) {
@@ -105,38 +140,62 @@ export async function getEliminations(
     }
     const prompt = [{ role: "user", content: promptContent }];
 
+    const schema = {
+        type: "array",
+        items: {
+            type: "object",
+            properties: {
+                id: { type: "string" },
+                name: { type: "string" },
+                has_feature: {
+                    type: "boolean",
+                    description: "Does this character have the feature from the question?",
+                },
+            },
+            required: ["id", "name", "has_feature"],
+        },
+    };
+
     try {
-        const result = await promiseWithTimeout(session.prompt(prompt), ELIMINATION_PROMPT_TIMEOUT_MS);
+        const result = await promiseWithTimeout(
+            session.prompt(prompt, { responseConstraint: schema }),
+            ELIMINATION_PROMPT_TIMEOUT_MS,
+        );
 
-        // Sanitize the response to extract JSON from markdown code blocks or raw text
-        const jsonMatch = result.match(/\[.*?\]/s);
-        if (!jsonMatch) {
-            console.warn("AI KEEP response was not valid JSON:", result);
-            return new Set<string>(); // Return no eliminations on parsing failure
-        }
+        // Developer-facing log for easier debugging
+        console.log("%c[DEBUG] AI Visual Analysis:", "color: #f59e0b; font-weight: bold;", JSON.parse(result));
 
-        const keptIdsArray = JSON.parse(jsonMatch[0]);
+        const analysisResults = JSON.parse(result) as EliminationAnalysisResult[];
 
-        if (!Array.isArray(keptIdsArray)) {
-            console.warn("AI KEEP response was not an array:", keptIdsArray);
+        if (!Array.isArray(analysisResults)) {
+            console.warn("AI analysis response was not an array:", analysisResults);
             return new Set<string>();
         }
 
-        const keptIds = new Set(
-            keptIdsArray
-                .map((item: any) => (typeof item === "string" ? item : null))
-                .filter((id): id is string => id !== null),
-        );
-
-        const allCharacterIds = new Set(characters.map((c) => c.id));
+        // Step 2: Apply deterministic logic client-side.
+        // This removes the possibility of the AI making a logical error.
         const eliminatedIds = new Set<string>();
+        analysisResults.forEach((res) => {
+            const characterHasFeature = res.has_feature;
+            let shouldEliminate = false;
 
-        // Find the difference: all characters minus the ones to keep
-        for (const id of allCharacterIds) {
-            if (!keptIds.has(id)) {
-                eliminatedIds.add(id);
+            if (playerAnswer === "Yes") {
+                // Player's character HAS the feature, so eliminate characters who DON'T.
+                if (!characterHasFeature) {
+                    shouldEliminate = true;
+                }
+            } else {
+                // playerAnswer === "No"
+                // Player's character DOES NOT have the feature, so eliminate characters who DO.
+                if (characterHasFeature) {
+                    shouldEliminate = true;
+                }
             }
-        }
+
+            if (shouldEliminate) {
+                eliminatedIds.add(res.id);
+            }
+        });
 
         // Safety check: Don't eliminate everyone if the AI made a mistake.
         if (eliminatedIds.size === characters.length && characters.length > 0) {

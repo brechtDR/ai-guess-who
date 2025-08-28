@@ -4,6 +4,22 @@ import * as dbService from "../services/dbService";
 import * as geminiService from "../services/geminiService";
 import { AIStatus, GameState, type Character, type GameWinner, type Message } from "../types";
 
+const FINAL_GUESS_REGEX = /^(?:is it|is the person|is the character|is your? character)\s+(.*?)\??$/i;
+
+/**
+ * A utility function to shuffle an array using the Fisher-Yates algorithm.
+ * @param array The array to shuffle.
+ * @returns A new shuffled array.
+ */
+const shuffleArray = <T>(array: T[]): T[] => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+};
+
 /**
  * A custom hook to manage the entire state and logic for the "AI Guess Who?" game.
  * This includes game flow, character management, AI interactions, and state updates.
@@ -147,7 +163,9 @@ export const useGameLogic = () => {
         if (!defaultCharsWithBlobs) return;
         setIsLoading(true);
         try {
-            await startGame(defaultCharsWithBlobs);
+            // Shuffle the full list of default characters and select the first 5 for the game
+            const selectedCharacters = shuffleArray(defaultCharsWithBlobs).slice(0, 5);
+            await startGame(selectedCharacters);
         } catch (e) {
             // Error is handled and displayed by startGame
         } finally {
@@ -206,8 +224,7 @@ export const useGameLogic = () => {
             };
 
             // Check if the player is making a final guess
-            const finalGuessRegex = /^(?:is it|is the character|is your? character)\s+(.*?)\??$/i;
-            const guessMatch = question.trim().match(finalGuessRegex);
+            const guessMatch = question.trim().match(FINAL_GUESS_REGEX);
 
             if (guessMatch) {
                 const guessedName = guessMatch[1].trim();
@@ -261,8 +278,7 @@ export const useGameLogic = () => {
             if (!lastAIQuestion) return;
             setMessages((prev) => [...prev, { sender: "PLAYER", text: answer }]);
 
-            const finalGuessRegex = /^(?:is it|is the character|is your? character)\s+(.*?)\??$/i;
-            const guessMatch = lastAIQuestion.trim().match(finalGuessRegex);
+            const guessMatch = lastAIQuestion.trim().match(FINAL_GUESS_REGEX);
 
             if (guessMatch) {
                 const guessedName = guessMatch[1].trim();

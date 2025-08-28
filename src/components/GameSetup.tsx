@@ -1,4 +1,4 @@
-import { type ComponentPropsWithoutRef, useEffect, useRef, useState } from "react";
+import React, { type ComponentPropsWithoutRef, useEffect, useRef, useState } from "react";
 import { AIStatus } from "../types";
 import styles from "./GameSetup.module.css";
 import { CameraIcon, CheckCircleIcon, PlayAgainIcon, SpinnerIcon, UsersIcon } from "./icons";
@@ -135,7 +135,7 @@ function GameSetup({
             <div className={`${styles.optionsGrid} ${hasCustomSet ? styles.hasThree : ""}`}>
                 <SetupOptionCard
                     title="Play Default Game"
-                    description="Jump right in with a pre-defined set of 5 characters."
+                    description="Jump right in with a random set of 5 characters."
                     icon={<UsersIcon />}
                     onClick={onStartDefault}
                     disabled={defaultGameDisabled}

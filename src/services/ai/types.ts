@@ -6,7 +6,7 @@
  * Type definition for a language model session.
  */
 export type LanguageModelSession = {
-    prompt(params: any): Promise<string>;
+    prompt(prompt: any, options?: { responseConstraint?: any }): Promise<string>;
     destroy(): void;
 };
 
