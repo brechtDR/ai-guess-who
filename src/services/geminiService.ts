@@ -1,224 +1,341 @@
 import { AIStatus, type Character, type Message } from "../types";
 
-// --- Type Definitions for window.ai ---
-// These are based on the evolving standard for on-device AI in browsers.
+// --- Type Definitions for older window.ai.languageModel API ---
+interface LanguageModelSession {
+    prompt(params: any): Promise<string>;
+    destroy(): void;
+}
+
+interface LanguageModel {
+    create(options?: any): Promise<LanguageModelSession>;
+    availability(): Promise<"available" | "downloadable" | "downloading" | "no">;
+}
+
 declare global {
     interface Window {
+        LanguageModel?: LanguageModel;
         ai?: {
-            canCreateTextSession: () => Promise<"readily" | "after-download" | "no">;
-            createTextSession: (options?: { systemPrompt?: string }) => Promise<LanguageModelSession>;
-            defaultTextSessionOptions: () => Promise<{ temperature?: number; topK?: number }>;
+            languageModel?: LanguageModel;
         };
     }
 }
-
-interface LanguageModelSession {
-    prompt(input: string | LanguageModelMessage[], options?: LanguageModelPromptOptions): Promise<string>;
-    promptStreaming(
-        input: string | LanguageModelMessage[],
-        options?: LanguageModelPromptOptions,
-    ): Promise<AsyncIterable<string>>;
-    destroy(): void;
-    clone(): Promise<LanguageModelSession>;
-}
-
-interface LanguageModelPromptOptions {
-    responseConstraint?: any; // JSON Schema
-}
-
-interface LanguageModelMessage {
-    role: "user" | "system" | "assistant";
-    content: (string | LanguageModelContentPart)[];
-}
-
-interface LanguageModelContentPart {
-    type: "text" | "image" | "audio";
-    mimeType?: string;
-    data: Blob | ArrayBuffer | string;
-}
 // --- End Type Definitions ---
 
-let gameSession: LanguageModelSession | null = null;
-let isInitializing = false;
+// Timeout configuration
+const GENERAL_PROMPT_TIMEOUT_MS = 15000;
+const ELIMINATION_PROMPT_TIMEOUT_MS = 20000;
 
-export async function initializeAI(callbacks: {
-    onStatusChange: (status: AIStatus, message?: string) => void;
-    onProgress: (progress: number) => void;
-}) {
-    if (isInitializing) return;
-    isInitializing = true;
-    callbacks.onStatusChange(AIStatus.INITIALIZING, "Checking for on-device AI...");
-
-    if (!window.ai) {
-        callbacks.onStatusChange(AIStatus.UNAVAILABLE, "On-device AI is not available in this browser.");
-        return;
-    }
-
-    try {
-        const availability = await window.ai.canCreateTextSession();
-        if (availability === "no") {
-            callbacks.onStatusChange(AIStatus.UNAVAILABLE, "On-device AI model is not supported on this device.");
-        } else if (availability === "after-download") {
-            callbacks.onStatusChange(AIStatus.DOWNLOADING, "Downloading AI model...");
-            // The browser handles the download. We can't easily get progress,
-            // so we just wait for it to become ready.
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            callbacks.onStatusChange(AIStatus.READY, "AI Model Ready!");
-        } else {
-            callbacks.onStatusChange(AIStatus.READY, "AI Model Ready!");
-        }
-    } catch (e) {
-        callbacks.onStatusChange(AIStatus.ERROR, "An error occurred while initializing the AI.");
-        console.error(e);
+/**
+ * Custom error for timeout operations.
+ */
+class TimeoutError extends Error {
+    constructor(message = "Operation timed out") {
+        super(message);
+        this.name = "TimeoutError";
     }
 }
 
-export async function loadBlobsForDefaultCharacters(characters: Character[]): Promise<Character[]> {
-    const promises = characters.map(async (char) => {
-        if (char.imageBlob) return char;
+/**
+ * Wraps a promise with a timeout.
+ * @param promise The promise to wrap.
+ * @param ms The timeout in milliseconds.
+ * @returns A new promise that rejects with a TimeoutError if the original promise doesn't resolve or reject in time.
+ */
+function promiseWithTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            reject(new TimeoutError(`Operation timed out after ${ms} ms`));
+        }, ms);
+
+        promise
+            .then((value) => {
+                clearTimeout(timer);
+                resolve(value);
+            })
+            .catch((reason) => {
+                clearTimeout(timer);
+                reject(reason);
+            });
+    });
+}
+
+class GeminiNanoService {
+    private session: LanguageModelSession | null = null;
+    private model: LanguageModel | null = null;
+
+    private getModelEntryPoint(): LanguageModel | null {
+        if (self.LanguageModel) return self.LanguageModel;
+        if (self.ai?.languageModel) return self.ai.languageModel;
+        return null;
+    }
+
+    async initialize(options: {
+        onStatusChange: (status: AIStatus, message?: string) => void;
+        onProgress?: (progress: number) => void;
+    }): Promise<void> {
+        const { onStatusChange, onProgress } = options;
+
+        onStatusChange(AIStatus.INITIALIZING, "Initializing AI...");
+        this.model = this.getModelEntryPoint();
+
+        if (!this.model) {
+            onStatusChange(
+                AIStatus.UNAVAILABLE,
+                "The on-device AI API is not available in this browser. Please use a supported browser (e.g., latest Chrome) and enable the necessary feature flags if required.",
+            );
+            return;
+        }
+
+        const createOptions = {
+            expectedInputs: [{ type: "image" }, { type: "audio" }],
+        };
+
         try {
-            const response = await fetch(char.image);
-            if (!response.ok) throw new Error(`Failed to fetch image: ${char.image}`);
-            const blob = await response.blob();
-            return { ...char, imageBlob: blob };
-        } catch (error) {
-            console.error(`Could not load image for ${char.name}:`, error);
-            return char;
+            const availability = await this.model.availability();
+
+            if (availability === "available") {
+                this.session = await this.model.create(createOptions);
+                onStatusChange(AIStatus.READY, "AI Model Ready!");
+            } else if (availability === "downloadable" || availability === "downloading") {
+                onStatusChange(AIStatus.DOWNLOADING, "AI model is downloading...");
+
+                this.session = await this.model.create({
+                    ...createOptions,
+                    monitor: (e: any) => {
+                        if (onProgress && e.addEventListener) {
+                            e.addEventListener("downloadprogress", (event: any) => {
+                                if (event.loaded && event.total) {
+                                    const progress = (event.loaded / event.total) * 100;
+                                    onProgress(progress);
+                                    onStatusChange(
+                                        AIStatus.DOWNLOADING,
+                                        `AI model is downloading... ${Math.floor(progress)}%`,
+                                    );
+                                }
+                            });
+                        }
+                    },
+                });
+                onStatusChange(AIStatus.READY, "AI Model Ready!");
+            } else {
+                onStatusChange(AIStatus.UNAVAILABLE, "The on-device AI is not supported on this device.");
+            }
+        } catch (e: any) {
+            console.error("AI Initialization Error:", e);
+            onStatusChange(AIStatus.ERROR, e.message || "An error occurred during AI setup.");
         }
-    });
-    return Promise.all(promises);
-}
-
-const SYSTEM_PROMPT = `You are an expert player in the game "Guess Who?". Your goal is to guess the human player's secret character by asking strategic yes/no questions.
-- Ask questions to eliminate as many characters as possible.
-- A good starting question often relates to a 50/50 split, like gender.
-- **Crucially, focus your questions on prominent, easily identifiable features.** Do NOT ask about very subtle details that a human might miss or disagree on, like "Does the character have visible freckles?" or "Does the character have a tiny, barely visible tattoo?". Instead, ask about clear features like hair color, glasses, hats, or beards.
-- When making a final guess, phrase it as "Is your character [Name]?".
-- You will be provided with a list of remaining characters and the game history. Use this to avoid asking redundant questions.
-`;
-
-export async function startNewGameSession() {
-    if (!window.ai) throw new Error("AI not initialized.");
-    if (gameSession) {
-        gameSession.destroy();
     }
-    gameSession = await window.ai.createTextSession({ systemPrompt: SYSTEM_PROMPT });
-}
 
-export async function getAnswerToPlayerQuestion(secretCharacter: Character, question: string): Promise<string> {
-    if (!window.ai) throw new Error("AI not initialized.");
-    if (!secretCharacter.imageBlob) throw new Error("AI secret character image blob is missing.");
-
-    const tempSession = await window.ai.createTextSession();
-    const prompt: LanguageModelMessage[] = [
-        {
-            role: "system",
-            content: [
-                "You are the character in the image. You must answer questions about yourself with ONLY 'Yes' or 'No'.",
-            ],
-        },
-        {
-            role: "user",
-            content: [
-                { type: "image", mimeType: secretCharacter.imageBlob.type, data: secretCharacter.imageBlob },
-                { type: "text", data: `The player's question is: "${question}"` },
-            ],
-        },
-    ];
-    const responseSchema = { type: "boolean" };
-
-    try {
-        const result = await tempSession.prompt(prompt, { responseConstraint: responseSchema });
-        const answer = JSON.parse(result);
-        return answer ? "Yes" : "No";
-    } catch (e) {
-        console.error("Error getting answer from AI, falling back to text analysis", e);
-        const fallbackResult = await tempSession.prompt(prompt);
-        if (fallbackResult.toLowerCase().includes("yes")) return "Yes";
-        if (fallbackResult.toLowerCase().includes("no")) return "No";
-        return "I'm not sure.";
-    } finally {
-        tempSession.destroy();
+    async loadBlobsForDefaultCharacters(characters: Character[]): Promise<Character[]> {
+        return Promise.all(
+            characters.map(async (char) => {
+                if (char.imageBlob) return char;
+                try {
+                    const response = await fetch(char.image);
+                    if (!response.ok) throw new Error(`Failed to fetch ${char.image}`);
+                    const blob = await response.blob();
+                    return { ...char, imageBlob: blob };
+                } catch (error) {
+                    console.error(`Could not load image for ${char.name}:`, error);
+                    return char;
+                }
+            }),
+        );
     }
-}
 
-export async function getEliminations(
-    remainingCharacters: Character[],
-    question: string,
-    answer: "Yes" | "No",
-): Promise<Set<string>> {
-    if (!gameSession) throw new Error("Game session not started.");
-
-    const charactersJson = JSON.stringify(remainingCharacters.map((c) => ({ id: c.id, name: c.name })));
-    const prompt = `Based on my question "${question}" and the player's answer "${answer}", which of these characters should I KEEP? Characters: ${charactersJson}.`;
-    const responseSchema = {
-        type: "object",
-        properties: {
-            keptCharacterIds: { type: "array", items: { type: "string" } },
-        },
-        required: ["keptCharacterIds"],
-    };
-
-    const result = await gameSession.prompt(prompt, { responseConstraint: responseSchema });
-    const jsonResponse = JSON.parse(result);
-    const keptIds = new Set<string>(jsonResponse.keptCharacterIds || []);
-    const eliminatedIds = new Set<string>();
-    remainingCharacters.forEach((char) => {
-        if (!keptIds.has(char.id)) {
-            eliminatedIds.add(char.id);
+    private async ensureSession(): Promise<LanguageModelSession> {
+        if (!this.session) {
+            throw new Error("AI session not initialized. Call initialize() first.");
         }
-    });
-    return eliminatedIds;
-}
+        return this.session;
+    }
 
-export async function generateAIQuestion(remainingCharacters: Character[], history: Message[]): Promise<string> {
-    if (!gameSession) throw new Error("Game session not started.");
+    async transcribeAudio(audioBlob: Blob): Promise<string> {
+        const session = await this.ensureSession();
+        const prompt = [
+            {
+                role: "user",
+                content: [
+                    { type: "text", value: "Transcribe the following audio into a short, one-sentence question." },
+                    { type: "audio", value: audioBlob },
+                ],
+            },
+        ];
+        const result = await promiseWithTimeout(session.prompt(prompt), GENERAL_PROMPT_TIMEOUT_MS);
+        return result.trim().replace(/"/g, "");
+    }
 
-    const charactersJson = JSON.stringify(remainingCharacters.map((c) => ({ id: c.id, name: c.name })));
-    const formattedHistory: LanguageModelMessage[] = history
-        .filter((msg) => msg.sender === "PLAYER" || msg.sender === "AI")
-        .map((msg) => ({
-            role: (msg.sender === "PLAYER" ? "user" : "assistant") as "user" | "assistant",
-            content: [msg.text],
-        }));
+    async getAnswerToPlayerQuestion(character: Character, question: string): Promise<string> {
+        const session = await this.ensureSession();
+        if (!character.imageBlob) {
+            throw new Error(`Image blob for ${character.name} is missing.`);
+        }
 
-    const userPrompt: LanguageModelMessage = {
-        role: "user",
-        content: [
-            `Here are the remaining characters: ${charactersJson}.
-            Based on our conversation history, generate the next best yes/no question to ask.
-            **Remember the most important rule: Your question MUST be about a prominent, easily identifiable feature.** Avoid subtle details.
-            Good examples: "Is your character wearing a hat?", "Does your character have red hair?".
-            Bad examples: "Does your character have visible freckles?", "Does the character have a tiny earring?".`,
-        ],
-    };
+        const prompt = [
+            {
+                role: "user",
+                content: [
+                    { type: "image", value: character.imageBlob },
+                    {
+                        type: "text",
+                        value: `You are a "Guess Who" player. Look ONLY at the image. The user asked a question. Your entire response MUST be either the single word "Yes" or the single word "No". User's question: "${question}"`,
+                    },
+                ],
+            },
+        ];
 
-    const fullPrompt = [...formattedHistory, userPrompt];
-    const result = await gameSession.prompt(fullPrompt);
-    return result.trim();
-}
+        const result = await promiseWithTimeout(session.prompt(prompt), GENERAL_PROMPT_TIMEOUT_MS);
+        return result.toLowerCase().includes("yes") ? "Yes" : "No";
+    }
 
-export async function transcribeAudio(audioBlob: Blob): Promise<string> {
-    if (!window.ai) throw new Error("AI not initialized.");
+    async generateAIQuestion(characters: Character[], messages: Message[]): Promise<string> {
+        const session = await this.ensureSession();
 
-    const tempSession = await window.ai.createTextSession();
-    const prompt: LanguageModelMessage[] = [
-        {
-            role: "user",
-            content: [
-                { type: "audio", mimeType: audioBlob.type, data: audioBlob },
-                { type: "text", data: "Transcribe this audio. The user is asking a question for a 'Guess Who?' game." },
-            ],
-        },
-    ];
+        const historyText = messages
+            .filter((msg) => msg.sender === "PLAYER" || msg.sender === "AI")
+            .map((msg) => `${msg.sender === "PLAYER" ? "You" : "AI"}: ${msg.text}`)
+            .join("\n");
 
-    try {
-        const result = await tempSession.prompt(prompt);
-        return result.trim();
-    } catch (e) {
-        console.error("Audio transcription failed:", e);
-        return "Sorry, I couldn't understand the audio.";
-    } finally {
-        tempSession.destroy();
+        const characterNames = characters.map((c) => c.name).join(", ");
+
+        const promptText = `You are an expert "Guess Who?" player. Your goal is to win by asking the smartest possible yes/no question.
+
+**Analyze the situation:**
+*   **Characters remaining (${characters.length}):** ${characterNames}
+*   **Conversation History:**
+${historyText || "No questions yet."}
+
+**Your Mission:**
+Formulate a single question to ask me.
+
+**Follow these rules precisely:**
+1.  **Examine the images:** Look at all remaining characters for shared or unique visual features (e.g., hair color, glasses, hats, jewelry, facial hair). Keep it to simple features that are easy to spot.
+2.  **Find the best split:** The ideal question is one where the 'Yes' and 'No' answers would each eliminate a significant number of characters. A 50/50 split is perfect.
+3.  **CRITICAL - Ask about existing features ONLY:** Do NOT ask a question about a feature if NO remaining character has it. For example, don't ask about a mustache if no one has one.
+4.  **CRITICAL - Be original:** Do NOT repeat a question that is already in the conversation history.
+5.  **Format your question correctly:**
+    *   Start with "Is your character...?" or "Does your character have...?".
+    *   The question must be about my *single* secret character.
+
+**Output:**
+Your entire response MUST be ONLY the question you've decided to ask. Do not add any other text.`;
+
+        const promptContent: any[] = [{ type: "text", value: promptText }];
+        for (const char of characters) {
+            if (char.imageBlob) {
+                promptContent.push({ type: "image", value: char.imageBlob });
+            }
+        }
+
+        const prompt = [{ role: "user", content: promptContent }];
+        const result = await promiseWithTimeout(session.prompt(prompt), GENERAL_PROMPT_TIMEOUT_MS);
+        return result.trim().replace(/"/g, "");
+    }
+
+    async getEliminations(characters: Character[], question: string, playerAnswer: "Yes" | "No"): Promise<Set<string>> {
+        const session = await this.ensureSession();
+        const characterData = characters.map((c) => ({ id: c.id, name: c.name }));
+
+        const promptText = `You are a "Guess Who?" game engine. Your only job is to identify which characters to KEEP based on a question and answer.
+
+**INPUT:**
+1.  **Question Asked:** "${question}"
+2.  **Player's Answer:** "${playerAnswer}"
+3.  **Characters:** ${JSON.stringify(characterData)}
+
+**YOUR TASK:**
+For each character, answer the question "${question}" with a "Yes" or "No" based on their image.
+Then, create a list of IDs for all characters where YOUR answer matches the Player's Answer ("${playerAnswer}").
+
+**EXAMPLE:**
+*   Question: "Is the character wearing glasses?"
+*   Player's Answer: "Yes"
+*   Characters: [{id: "alex", name: "Alex"}(has glasses), {id: "bella", name: "Bella"}(no glasses)]
+*   Your thought process:
+    *   Alex: Does Alex have glasses? Yes. "Yes" matches the player's answer. KEEP.
+    *   Bella: Does Bella have glasses? No. "No" does not match the player's answer. DISCARD.
+*   Result: ["alex"]
+
+**OUTPUT FORMAT:**
+*   You MUST respond with ONLY a valid JSON array of strings.
+*   The array must contain the 'id' for each character you decided to KEEP.
+*   Do not add any explanation.
+
+Based on the images below, generate the JSON array now.`;
+
+        const promptContent: any[] = [{ type: "text", value: promptText }];
+        for (const char of characters) {
+            if (char.imageBlob) {
+                promptContent.push({ type: "image", value: char.imageBlob });
+            }
+        }
+        const prompt = [{ role: "user", content: promptContent }];
+
+        try {
+            const result = await promiseWithTimeout(session.prompt(prompt), ELIMINATION_PROMPT_TIMEOUT_MS);
+
+            // Sanitize the response to extract JSON from markdown code blocks or raw text
+            const jsonMatch = result.match(/\[.*?\]/s);
+            if (!jsonMatch) {
+                console.warn("AI KEEP response was not valid JSON:", result);
+                return new Set<string>(); // Return no eliminations
+            }
+
+            const keptIdsArray = JSON.parse(jsonMatch[0]);
+
+            if (!Array.isArray(keptIdsArray)) {
+                console.warn("AI KEEP response was not an array:", keptIdsArray);
+                return new Set<string>();
+            }
+
+            const keptIds = new Set(
+                keptIdsArray
+                    .map((item: any) => (typeof item === "string" ? item : null))
+                    .filter((id): id is string => id !== null),
+            );
+
+            const allCharacterIds = new Set(characters.map((c) => c.id));
+            const eliminatedIds = new Set<string>();
+
+            // Find the difference: all characters minus the ones to keep
+            for (const id of allCharacterIds) {
+                if (!keptIds.has(id)) {
+                    eliminatedIds.add(id);
+                }
+            }
+
+            // Safety check: Don't eliminate everyone if the AI made a mistake.
+            if (eliminatedIds.size === characters.length && characters.length > 0) {
+                console.warn("AI logic would have eliminated all characters. Preventing this action.");
+                return new Set<string>();
+            }
+
+            return eliminatedIds;
+        } catch (e) {
+            console.error("Error during AI elimination processing:", e);
+            // On any error (timeout or otherwise), don't eliminate anyone.
+            return new Set<string>();
+        }
     }
 }
+
+const service = new GeminiNanoService();
+
+export const initializeAI = (options: {
+    onStatusChange: (status: AIStatus, message?: string) => void;
+    onProgress?: (progress: number) => void;
+}) => service.initialize(options);
+
+// This is a placeholder to match the function call in App.tsx.
+// The GeminiNanoService manages a single, long-lived session.
+export const startNewGameSession = async () => Promise.resolve();
+
+export const loadBlobsForDefaultCharacters = (characters: Character[]) =>
+    service.loadBlobsForDefaultCharacters(characters);
+export const getAnswerToPlayerQuestion = (character: Character, question: string) =>
+    service.getAnswerToPlayerQuestion(character, question);
+export const generateAIQuestion = (characters: Character[], messages: Message[]) =>
+    service.generateAIQuestion(characters, messages);
+export const getEliminations = (characters: Character[], question: string, playerAnswer: "Yes" | "No") =>
+    service.getEliminations(characters, question, playerAnswer);
+export const transcribeAudio = (audioBlob: Blob) => service.transcribeAudio(audioBlob);
