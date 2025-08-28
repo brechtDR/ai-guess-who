@@ -3,11 +3,16 @@ import * as dbService from "../services/dbService";
 import { type Character } from "../types";
 import styles from "./CustomGameSetup.module.css";
 
-type CustomGameSetupProps = {
+export type CustomGameSetupProps = {
+    /** Callback to start the game with the newly created characters. */
     onStartGame: (characters: Character[]) => void;
+    /** Callback to return to the main setup screen. */
     onBack: () => void;
 };
 
+/**
+ * A component that allows players to create a custom set of characters using their device's camera.
+ */
 function CustomGameSetup({ onStartGame, onBack }: CustomGameSetupProps) {
     const [characters, setCharacters] = useState<Character[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -47,6 +52,7 @@ function CustomGameSetup({ onStartGame, onBack }: CustomGameSetupProps) {
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
+        // Resize image for performance
         const MAX_DIMENSION = 512;
         const { videoWidth, videoHeight } = video;
         const aspectRatio = videoWidth / videoHeight;
@@ -112,7 +118,11 @@ function CustomGameSetup({ onStartGame, onBack }: CustomGameSetupProps) {
     return (
         <div className={styles.container}>
             <h2 className={styles.title}>Create 5 Custom Characters</h2>
-            {error && <p className={styles.error}>{error}</p>}
+            {error && (
+                <p className={styles.error} role="alert">
+                    {error}
+                </p>
+            )}
 
             <div className={styles.cameraContainer}>
                 <video ref={videoRef} autoPlay playsInline muted className={styles.videoFeed}></video>
@@ -133,6 +143,7 @@ function CustomGameSetup({ onStartGame, onBack }: CustomGameSetupProps) {
                                     <button
                                         onClick={() => removeCharacter(characters[i].id)}
                                         className={styles.removeButton}
+                                        aria-label={`Remove ${characters[i].name}`}
                                     >
                                         Remove
                                     </button>
