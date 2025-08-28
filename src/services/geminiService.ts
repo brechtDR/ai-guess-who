@@ -1,15 +1,16 @@
 import { AIStatus, type Character, type Message } from "../types";
+import { getAIQuestionPrompt, getEliminationsPrompt } from "./prompts";
 
 // --- Type Definitions for older window.ai.languageModel API ---
-interface LanguageModelSession {
+type LanguageModelSession = {
     prompt(params: any): Promise<string>;
     destroy(): void;
-}
+};
 
-interface LanguageModel {
+type LanguageModel = {
     create(options?: any): Promise<LanguageModelSession>;
     availability(): Promise<"available" | "downloadable" | "downloading" | "no">;
-}
+};
 
 declare global {
     interface Window {
@@ -59,16 +60,28 @@ function promiseWithTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
     });
 }
 
+/**
+ * A service class to encapsulate all interactions with the on-device Gemini Nano model
+ * via the experimental `window.ai.languageModel` API.
+ */
 class GeminiNanoService {
     private session: LanguageModelSession | null = null;
     private model: LanguageModel | null = null;
 
+    /**
+     * Finds the entry point for the on-device AI model in the window object.
+     * @returns The LanguageModel object or null if not found.
+     */
     private getModelEntryPoint(): LanguageModel | null {
         if (self.LanguageModel) return self.LanguageModel;
         if (self.ai?.languageModel) return self.ai.languageModel;
         return null;
     }
 
+    /**
+     * Initializes the AI model, handling availability checks and downloads.
+     * @param options Callbacks for status and progress updates.
+     */
     async initialize(options: {
         onStatusChange: (status: AIStatus, message?: string) => void;
         onProgress?: (progress: number) => void;
@@ -126,6 +139,11 @@ class GeminiNanoService {
         }
     }
 
+    /**
+     * Fetches and converts image URLs for the default characters into Blobs.
+     * @param characters The array of default characters.
+     * @returns A promise that resolves to the characters array with `imageBlob` properties populated.
+     */
     async loadBlobsForDefaultCharacters(characters: Character[]): Promise<Character[]> {
         return Promise.all(
             characters.map(async (char) => {
@@ -137,12 +155,17 @@ class GeminiNanoService {
                     return { ...char, imageBlob: blob };
                 } catch (error) {
                     console.error(`Could not load image for ${char.name}:`, error);
-                    return char;
+                    return char; // Return character without blob on error
                 }
             }),
         );
     }
 
+    /**
+     * Ensures the AI session is active before making a prompt.
+     * @returns The active LanguageModelSession.
+     * @throws If the session is not initialized.
+     */
     private async ensureSession(): Promise<LanguageModelSession> {
         if (!this.session) {
             throw new Error("AI session not initialized. Call initialize() first.");
@@ -150,6 +173,11 @@ class GeminiNanoService {
         return this.session;
     }
 
+    /**
+     * Transcribes an audio blob into a single-sentence question.
+     * @param audioBlob The audio data to transcribe.
+     * @returns A promise that resolves to the transcribed text.
+     */
     async transcribeAudio(audioBlob: Blob): Promise<string> {
         const session = await this.ensureSession();
         const prompt = [
@@ -165,6 +193,12 @@ class GeminiNanoService {
         return result.trim().replace(/"/g, "");
     }
 
+    /**
+     * Gets a "Yes" or "No" answer from the AI for a player's question about a secret character.
+     * @param character The AI's secret character.
+     * @param question The player's question.
+     * @returns A promise that resolves to "Yes" or "No".
+     */
     async getAnswerToPlayerQuestion(character: Character, question: string): Promise<string> {
         const session = await this.ensureSession();
         if (!character.imageBlob) {
@@ -188,37 +222,16 @@ class GeminiNanoService {
         return result.toLowerCase().includes("yes") ? "Yes" : "No";
     }
 
+    /**
+     * Generates a strategic question for the AI to ask the player.
+     * @param characters The list of remaining possible characters.
+     * @param messages The conversation history.
+     * @returns A promise that resolves to the AI's generated question.
+     */
     async generateAIQuestion(characters: Character[], messages: Message[]): Promise<string> {
         const session = await this.ensureSession();
 
-        const historyText = messages
-            .filter((msg) => msg.sender === "PLAYER" || msg.sender === "AI")
-            .map((msg) => `${msg.sender === "PLAYER" ? "You" : "AI"}: ${msg.text}`)
-            .join("\n");
-
-        const characterNames = characters.map((c) => c.name).join(", ");
-
-        const promptText = `You are an expert "Guess Who?" player. Your goal is to win by asking the smartest possible yes/no question.
-
-**Analyze the situation:**
-*   **Characters remaining (${characters.length}):** ${characterNames}
-*   **Conversation History:**
-${historyText || "No questions yet."}
-
-**Your Mission:**
-Formulate a single question to ask me.
-
-**Follow these rules precisely:**
-1.  **Examine the images:** Look at all remaining characters for shared or unique visual features (e.g., hair color, glasses, hats, jewelry, facial hair). Keep it to simple features that are easy to spot.
-2.  **Find the best split:** The ideal question is one where the 'Yes' and 'No' answers would each eliminate a significant number of characters. A 50/50 split is perfect.
-3.  **CRITICAL - Ask about existing features ONLY:** Do NOT ask a question about a feature if NO remaining character has it. For example, don't ask about a mustache if no one has one.
-4.  **CRITICAL - Be original:** Do NOT repeat a question that is already in the conversation history.
-5.  **Format your question correctly:**
-    *   Start with "Is your character...?" or "Does your character have...?".
-    *   The question must be about my *single* secret character.
-
-**Output:**
-Your entire response MUST be ONLY the question you've decided to ask. Do not add any other text.`;
+        const promptText = getAIQuestionPrompt(characters, messages);
 
         const promptContent: any[] = [{ type: "text", value: promptText }];
         for (const char of characters) {
@@ -232,36 +245,17 @@ Your entire response MUST be ONLY the question you've decided to ask. Do not add
         return result.trim().replace(/"/g, "");
     }
 
+    /**
+     * Determines which characters the AI should eliminate based on the player's answer.
+     * @param characters The list of currently available characters.
+     * @param question The question the AI asked.
+     * @param playerAnswer The player's "Yes" or "No" response.
+     * @returns A promise that resolves to a Set of character IDs to be eliminated.
+     */
     async getEliminations(characters: Character[], question: string, playerAnswer: "Yes" | "No"): Promise<Set<string>> {
         const session = await this.ensureSession();
-        const characterData = characters.map((c) => ({ id: c.id, name: c.name }));
 
-        const promptText = `You are a "Guess Who?" game engine. Your only job is to identify which characters to KEEP based on a question and answer.
-
-**INPUT:**
-1.  **Question Asked:** "${question}"
-2.  **Player's Answer:** "${playerAnswer}"
-3.  **Characters:** ${JSON.stringify(characterData)}
-
-**YOUR TASK:**
-For each character, answer the question "${question}" with a "Yes" or "No" based on their image.
-Then, create a list of IDs for all characters where YOUR answer matches the Player's Answer ("${playerAnswer}").
-
-**EXAMPLE:**
-*   Question: "Is the character wearing glasses?"
-*   Player's Answer: "Yes"
-*   Characters: [{id: "alex", name: "Alex"}(has glasses), {id: "bella", name: "Bella"}(no glasses)]
-*   Your thought process:
-    *   Alex: Does Alex have glasses? Yes. "Yes" matches the player's answer. KEEP.
-    *   Bella: Does Bella have glasses? No. "No" does not match the player's answer. DISCARD.
-*   Result: ["alex"]
-
-**OUTPUT FORMAT:**
-*   You MUST respond with ONLY a valid JSON array of strings.
-*   The array must contain the 'id' for each character you decided to KEEP.
-*   Do not add any explanation.
-
-Based on the images below, generate the JSON array now.`;
+        const promptText = getEliminationsPrompt(question, playerAnswer, characters);
 
         const promptContent: any[] = [{ type: "text", value: promptText }];
         for (const char of characters) {
@@ -326,8 +320,8 @@ export const initializeAI = (options: {
     onProgress?: (progress: number) => void;
 }) => service.initialize(options);
 
-// This is a placeholder to match the function call in App.tsx.
-// The GeminiNanoService manages a single, long-lived session.
+// The GeminiNanoService manages a single, long-lived session, so starting a "new"
+// session is a no-op from the caller's perspective. This function exists for API consistency.
 export const startNewGameSession = async () => Promise.resolve();
 
 export const loadBlobsForDefaultCharacters = (characters: Character[]) =>
