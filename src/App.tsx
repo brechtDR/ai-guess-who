@@ -25,7 +25,6 @@ function App() {
         isLoading,
         playerEliminatedChars,
         aiRemainingChars,
-        aiThinkingChars,
         aiStatus,
         aiStatusMessage,
         downloadProgress,
@@ -74,7 +73,6 @@ function App() {
             case GameState.PLAYER_TURN_ELIMINATING:
             case GameState.AI_TURN:
             case GameState.AI_TURN_WAITING_FOR_ANSWER:
-            case GameState.AI_PROCESSING:
                 if (!playerSecret || !aiSecret || activeCharacters.length === 0) {
                     return (
                         <div className={styles.errorContainer}>
@@ -117,11 +115,7 @@ function App() {
                                 <div className={styles.boardArea}>
                                     <div className={styles.boardWrapper}>
                                         <h2 className={styles.boardTitle}>AI's Board</h2>
-                                        <GameBoard
-                                            characters={activeCharacters}
-                                            eliminatedChars={aiEliminatedChars}
-                                            thinkingChars={aiThinkingChars}
-                                        />
+                                        <GameBoard characters={activeCharacters} eliminatedChars={aiEliminatedChars} />
                                         <p className={styles.boardSubtext}>
                                             The AI eliminates characters from its own board.
                                         </p>

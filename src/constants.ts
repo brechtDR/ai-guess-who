@@ -1,7 +1,7 @@
 import { type Character } from "./types";
 
 export const DEFAULT_CHARACTERS: Character[] = [
-    { id: "!lex", name: "Alex", image: "/ai-guess-who/images/generated/Alex.jpeg" },
+    { id: "Alex", name: "Alex", image: "/ai-guess-who/images/generated/Alex.jpeg" },
     { id: "Brad", name: "Brad", image: "/ai-guess-who/images/generated/Brad.jpeg" },
     { id: "Frank", name: "Frank", image: "/ai-guess-who/images/generated/Frank.jpeg" },
     { id: "Genna", name: "Genna", image: "/ai-guess-who/images/generated/Genna.jpeg" },

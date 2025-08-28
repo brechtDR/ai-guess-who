@@ -4,5 +4,5 @@
  * This file re-exports functions from smaller, more focused modules within the `/ai` directory.
  */
 export { initialize as initializeAI, startNewGameSession } from "./ai/session";
-export { loadBlobsForDefaultCharacters } from "./ai/dataLoader.ts";
-export { transcribeAudio, getAnswerToPlayerQuestion, generateAIQuestion, getEliminations } from "./ai/api";
+export { loadBlobsForDefaultCharacters } from "./ai/dataLoader";
+export { transcribeAudio, getAnswerToPlayerQuestion, getAIQuestionAndAnalysis } from "./ai/api";

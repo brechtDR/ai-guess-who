@@ -6,34 +6,67 @@ import { type Character } from "../types";
  * @returns The system prompt string.
  */
 export const getSystemPrompt = (): string => {
-    return `You are an expert "Guess Who?" player. Your goal is to win by asking the smartest possible yes/no question to eliminate the maximum number of characters. A good starting question often relates to gender, as it can split the characters in half.`;
+    return `You are an expert "Guess Who?" player AI. Your goal is to win by deducing the human player's secret character.
+
+**Core Rules & Strategy:**
+1.  **Objective:** Ask a series of yes/no questions to eliminate candidates from your board.
+2.  **Winning Strategy:** The smartest question is one that splits the remaining characters as close to 50/50 as possible. A question where the feature applies to everyone or no one is a wasted turn and is forbidden.
+3.  **Question Quality:** Questions must be about clear, unambiguous, and binary (yes/no) visual features.
+    *   **Good Examples:** 'has glasses', 'is wearing a hat', 'hair is blonde'.
+    *   **Bad (Subjective) Examples:** 'looks happy', 'seems old', 'has a long face'.
+4.  **Honesty:** Crucially, you do NOT know the human's secret character. You must use pure logic based on my answers to deduce it. Do not cheat or pretend to know. Your analysis must be based only on the images provided.`;
 };
 
 /**
- * Generates the prompt for the AI to ask a strategic question for the current turn.
- * This is combined with the system prompt and conversation history.
+ * Generates the prompt for the AI to create a strategic question and provide its own
+ * analysis of the remaining characters in a single, consistent step.
+ * This version uses a "Chain of Thought" approach to force a more deliberate analysis.
  * @param characters The list of remaining characters for the AI to consider.
- * @returns The turn-specific prompt string.
+ * @param retryReason An optional string explaining why a previous attempt failed.
+ * @returns The turn-specific prompt string for generating a question and analysis.
  */
-export const getAIQuestionPrompt = (characters: Character[]): string => {
+export const getAIQuestionAndAnalysisPrompt = (characters: Character[], retryReason?: string): string => {
     const characterNames = characters.map((c) => c.name).join(", ");
+    const characterData = characters.map((c) => ({ id: c.id, name: c.name }));
 
-    return `Based on the conversation history and the remaining characters, formulate your next best yes/no question.
+    const retryInstruction = retryReason
+        ? `
+**IMPORTANT - PREVIOUS ATTEMPT FAILED:**
+Your last attempt was unsuccessful. Reason: "${retryReason}".
+You MUST choose a DIFFERENT feature for your question this time, following your core strategy.`
+        : "";
 
-**Analyze the situation:**
-*   **Characters remaining (${characters.length}):** ${characterNames}
+    return `It is your turn. Analyze your board and formulate your next move.
 
-**Follow these rules precisely:**
-1.  **Perform a meticulous visual analysis of EACH character image:** Your primary task is to be an expert observer. Scrutinize every detail: hair (color, style, length, baldness), eyes (color, glasses, sunglasses), facial features (facial hair like mustaches or beards, smiles, expressions), accessories (hats, earrings, necklaces), and clothing (color, type like shirt or jacket). Do not guess or hallucinate features; base your analysis only on visible evidence.
-2.  **Find the best split:** The ideal question is one where the 'Yes' and 'No' answers would each eliminate a significant number of characters. A 50/50 split is perfect.
-3.  **CRITICAL - Ask about existing features ONLY:** Do NOT ask a question about a feature if NO remaining character has it. For example, don't ask about a mustache if no one has one.
-4.  **CRITICAL - Be original:** Do NOT repeat a question that is already in the conversation history.
-5.  **Format your question correctly:**
-    *   Start with "Is your character...?" or "Does your character have...?".
-    *   The question must be about my *single* secret character.
+**Current Game State:**
+*   **Your Remaining Candidates (${characters.length}):** ${characterNames}
+*   **Your Candidate Data:** ${JSON.stringify(characterData)}
 
-**Output:**
-Your entire response MUST be ONLY the question you've decided to ask. Do not add any other text.`;
+${retryInstruction}
+
+---
+**YOUR TASK: Follow these steps to determine your question.**
+---
+Remember your core strategy: find a feature that splits the group.
+
+**Step 1: Feature Brainstorming.**
+Look at all your candidates. List several distinct visual features you could ask about.
+
+**Step 2: Strategic Evaluation.**
+For each feature, count how many candidates have it vs. don't. Identify the feature that provides the best 50/50 split.
+
+**Step 3: Select the Best Question.**
+Choose the single best feature from your evaluation. This feature MUST be valid and split the group.
+
+**Step 4: Construct the Final JSON Output.**
+Based on your selected feature:
+1.  Formulate the question (e.g., "Does your character have a beard?").
+2.  Create the analysis array. For each of YOUR candidates, accurately set \`has_feature\` to \`true\` or \`false\`.
+
+**ACCURACY IS PARAMOUNT.** An error in your analysis will cause you to lose. Double-check your work.
+
+**Final Output:**
+Your entire response must be a single valid JSON object matching the schema. Do not add any other text or reasoning.`;
 };
 
 /**
@@ -42,37 +75,10 @@ Your entire response MUST be ONLY the question you've decided to ask. Do not add
  * @returns The prompt string.
  */
 export const getAnswerToPlayerQuestionPrompt = (question: string): string => {
-    return `You are a "Guess Who" player. Your task is to answer a question about the provided character image.
-1. **Perform a meticulous visual analysis of the single character image provided.** Your primary task is to be an expert observer. Scrutinize every detail: hair (color, style, length, baldness), eyes (color, glasses, sunglasses), facial features (facial hair like mustaches or beards, smiles, expressions), accessories (hats, earrings, necklaces), and clothing (color, type like shirt or jacket).
-2. **Analyze the user's question:** "${question}"
-3. **Answer truthfully** based ONLY on what you see in the image.
-Your output must be a single boolean value.`;
-};
-
-/**
- * Generates the prompt for the AI to perform visual analysis on a set of characters.
- * The AI's only job is to determine if a character has the feature from the question.
- * The logical deduction is handled by the client-side application code.
- * @param question The question the AI asked.
- * @param characters The list of characters the AI is considering.
- * @returns The complete prompt string to be sent to the language model.
- */
-export const getEliminationsPrompt = (question: string, characters: Character[]): string => {
-    const characterData = characters.map((c) => ({ id: c.id, name: c.name }));
-
-    return `You are a visual analysis engine for the game "Guess Who?". Your only task is to determine if a specific visual feature is present for a list of characters.
-
-**CONTEXT:**
-*   **Question Asked:** "${question}"
-*   **Characters to Evaluate:** ${JSON.stringify(characterData)}
-
-**YOUR TASK:**
-For EACH character, you must perform a visual analysis and output a JSON object.
-
-**Analysis ('has_feature'):**
-*   **Meticulously scrutinize each character's image** to identify the specific visual feature mentioned in the question: "${question}". Your analysis must be flawless.
-*   **Be comprehensive:** Consider variations of the feature. For example, 'hat' can include beanies, caps, fedoras, etc. 'Glasses' can include sunglasses or prescription glasses.
-*   **Stick to the facts:** Based ONLY on what you can see in the image, set the \`has_feature\` property to \`true\` if the character has the feature, and \`false\` if they do not. Do not infer or guess.
-
-Your output MUST be a valid JSON array of objects, one for each character, following the provided schema. Do not add any other text, explanations, or analysis. Just the JSON.`;
+    return `I am the human player. You are the AI player. It is my turn, and I am asking you a question about YOUR secret character.
+**The image provided to you IS YOUR secret character.**
+My question is: "${question}"
+Your task is to look at YOUR character image and answer my question with a simple 'Yes' or 'No'. 
+Your entire output MUST be a single boolean value: 'true' for Yes, 'false' for No. Do not add any other text. 
+Good to know: If my question uses "it" such as "is it a girl". The word "it" references YOUR character.`;
 };

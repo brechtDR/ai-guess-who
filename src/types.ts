@@ -17,7 +17,6 @@ export enum GameState {
     PLAYER_TURN_ELIMINATING,
     AI_TURN,
     AI_TURN_WAITING_FOR_ANSWER,
-    AI_PROCESSING,
     GAME_OVER,
 }
 
@@ -30,3 +29,14 @@ export enum AIStatus {
     UNAVAILABLE,
     ERROR,
 }
+
+export type EliminationAnalysisResult = {
+    id: string;
+    name: string;
+    has_feature: boolean;
+};
+
+export type AIQuestionAndAnalysis = {
+    question: string;
+    analysis: EliminationAnalysisResult[];
+};

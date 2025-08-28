@@ -2,7 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_CHARACTERS } from "../constants";
 import * as dbService from "../services/dbService";
 import * as geminiService from "../services/geminiService";
-import { AIStatus, GameState, type Character, type GameWinner, type Message } from "../types";
+import {
+    AIStatus,
+    GameState,
+    type Character,
+    type EliminationAnalysisResult,
+    type GameWinner,
+    type Message,
+} from "../types";
 
 const FINAL_GUESS_REGEX = /^(?:is it|is the person|is the character|is your? character)\s+(.*?)\??$/i;
 
@@ -41,7 +48,8 @@ export const useGameLogic = () => {
     // AI-specific state
     const [aiRemainingChars, setAiRemainingChars] = useState<Character[]>([]);
     const [lastAIQuestion, setLastAIQuestion] = useState<string>("");
-    const [aiThinkingChars, setAiThinkingChars] = useState<Set<string>>(new Set());
+    const [lastAIAnalysis, setLastAIAnalysis] = useState<EliminationAnalysisResult[]>([]);
+    const [isAIFinalGuess, setIsAIFinalGuess] = useState(false);
     const [aiStatus, setAiStatus] = useState<AIStatus>(AIStatus.INITIALIZING);
     const [aiStatusMessage, setAiStatusMessage] = useState<string>("Initializing AI...");
     const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
@@ -90,6 +98,8 @@ export const useGameLogic = () => {
         setPlayerSecret(null);
         setAiSecret(null);
         setMessages([]);
+        setLastAIAnalysis([]);
+        setIsAIFinalGuess(false);
         setDownloadProgress(null);
         // Re-trigger AI check on reset if it failed
         if (aiStatus === AIStatus.ERROR || aiStatus === AIStatus.UNAVAILABLE) {
@@ -153,6 +163,7 @@ export const useGameLogic = () => {
         ]);
         setWinner(null);
         setWinReason("");
+        setIsAIFinalGuess(false);
         setGameState(GameState.PLAYER_TURN_ASKING);
     }, []);
 
@@ -275,36 +286,69 @@ export const useGameLogic = () => {
      */
     const handlePlayerAnswer = useCallback(
         async (answer: "Yes" | "No") => {
-            if (!lastAIQuestion) return;
+            if (!lastAIQuestion || !playerSecret) return;
+            setIsLoading(true);
             setMessages((prev) => [...prev, { sender: "PLAYER", text: answer }]);
 
-            const guessMatch = lastAIQuestion.trim().match(FINAL_GUESS_REGEX);
+            if (isAIFinalGuess) {
+                const guessMatch = lastAIQuestion.trim().match(FINAL_GUESS_REGEX);
+                const guessedName = guessMatch ? guessMatch[1].trim() : "";
 
-            if (guessMatch) {
-                const guessedName = guessMatch[1].trim();
-                const isActualGuess = aiRemainingChars.some(
-                    (char) => char.name.toLowerCase() === guessedName.toLowerCase(),
-                );
+                if (guessedName) {
+                    const isCorrectGuess = guessedName.toLowerCase() === playerSecret.name.toLowerCase();
 
-                if (isActualGuess) {
-                    if (answer === "Yes") {
+                    if (isCorrectGuess && answer === "Yes") {
                         setWinner("AI");
                         setWinReason(`It correctly guessed your character was ${playerSecret?.name}.`);
-                    } else {
+                    } else if (!isCorrectGuess && answer === "No") {
                         setWinner("PLAYER");
-                        setWinReason(`The AI guessed incorrectly! You win!`);
+                        setWinReason(`The AI guessed ${guessedName} incorrectly! You win!`);
+                    } else {
+                        // Player was dishonest or there was a mismatch. AI wins on technicality.
+                        setWinner("AI");
+                        setWinReason(
+                            `There was a mismatch in the final guess. Your card was ${playerSecret?.name}. The AI wins.`,
+                        );
                     }
                     setGameState(GameState.GAME_OVER);
+                    setIsLoading(false);
                     return;
                 }
             }
 
-            // Regular turn, process eliminations
-            setIsLoading(true);
-            setGameState(GameState.AI_PROCESSING);
-            setAiThinkingChars(new Set(aiRemainingChars.map((c) => c.id)));
-            try {
-                const eliminatedIds = await geminiService.getEliminations(aiRemainingChars, lastAIQuestion, answer);
+            // Artificial delay to make it feel like the AI is processing
+            await new Promise((resolve) => setTimeout(resolve, 500));
+
+            // Use the pre-computed analysis from the AI's turn to perform eliminations.
+            const eliminatedIds = new Set<string>();
+            if (answer === "Yes") {
+                // Eliminate characters who DO NOT have the feature.
+                lastAIAnalysis.forEach((char) => {
+                    if (!char.has_feature) {
+                        eliminatedIds.add(char.id);
+                    }
+                });
+            } else {
+                // "No"
+                // Eliminate characters who DO have the feature.
+                lastAIAnalysis.forEach((char) => {
+                    if (char.has_feature) {
+                        eliminatedIds.add(char.id);
+                    }
+                });
+            }
+
+            // Safety check: Don't eliminate everyone if the AI made a mistake.
+            if (eliminatedIds.size === aiRemainingChars.length && aiRemainingChars.length > 0) {
+                console.warn("AI logic would have eliminated all characters. Preventing this action.");
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        sender: "SYSTEM",
+                        text: "The AI got confused and almost eliminated everyone! No one was eliminated.",
+                    },
+                ]);
+            } else {
                 const eliminatedNames = aiRemainingChars
                     .filter((c) => eliminatedIds.has(c.id))
                     .map((c) => c.name)
@@ -322,26 +366,19 @@ export const useGameLogic = () => {
                 const newRemainingChars = aiRemainingChars.filter((c) => !eliminatedIds.has(c.id));
                 setAiRemainingChars(newRemainingChars);
 
-                if (newRemainingChars.length > 0) {
-                    setGameState(GameState.PLAYER_TURN_ASKING);
-                } else {
+                if (newRemainingChars.length === 0) {
                     setWinner("PLAYER");
                     setWinReason(`The AI eliminated all its characters by mistake! You win!`);
                     setGameState(GameState.GAME_OVER);
+                    setIsLoading(false);
+                    return;
                 }
-            } catch (error) {
-                console.error("AI deduction error:", error);
-                setMessages((prev) => [
-                    ...prev,
-                    { sender: "SYSTEM", text: "The AI had trouble processing. Your turn!" },
-                ]);
-                setGameState(GameState.PLAYER_TURN_ASKING);
-            } finally {
-                setIsLoading(false);
-                setAiThinkingChars(new Set());
             }
+
+            setGameState(GameState.PLAYER_TURN_ASKING);
+            setIsLoading(false);
         },
-        [lastAIQuestion, aiRemainingChars, playerSecret],
+        [lastAIQuestion, playerSecret, aiRemainingChars, isAIFinalGuess, lastAIAnalysis],
     );
 
     // Effect to handle the AI's turn logic
@@ -350,32 +387,76 @@ export const useGameLogic = () => {
             if (gameState !== GameState.AI_TURN) return;
             setIsLoading(true);
 
-            try {
-                if (aiRemainingChars.length === 1) {
-                    const guess = `Is your character ${aiRemainingChars[0].name}?`;
-                    setLastAIQuestion(guess);
-                    setMessages((prev) => [...prev, { sender: "AI", text: guess }]);
-                } else if (aiRemainingChars.length === 0) {
-                    setWinner("PLAYER");
-                    setWinReason("The AI ran out of characters to guess from!");
-                    setGameState(GameState.GAME_OVER);
-                    setIsLoading(false);
-                    return;
-                } else {
-                    const question = await geminiService.generateAIQuestion(aiRemainingChars, messages);
-                    setLastAIQuestion(question);
-                    setMessages((prev) => [...prev, { sender: "AI", text: question }]);
-                }
+            // Ensure the final guess flag is false at the start of a normal turn.
+            setIsAIFinalGuess(false);
+
+            // Handle final guess if only one character remains
+            if (aiRemainingChars.length === 1) {
+                const guess = `Is your character ${aiRemainingChars[0].name}?`;
+                setLastAIQuestion(guess);
+                setIsAIFinalGuess(true); // Explicitly flag this as a final guess
+                setMessages((prev) => [...prev, { sender: "AI", text: guess }]);
                 setGameState(GameState.AI_TURN_WAITING_FOR_ANSWER);
-            } catch (error) {
-                console.error("AI question generation error:", error);
-                setMessages((prev) => [
-                    ...prev,
-                    { sender: "SYSTEM", text: "The AI is having trouble thinking. Your turn!" },
-                ]);
-                setGameState(GameState.PLAYER_TURN_ASKING);
-            } finally {
                 setIsLoading(false);
+                return;
+            }
+
+            // Handle edge case where AI has no characters left
+            if (aiRemainingChars.length === 0) {
+                setWinner("PLAYER");
+                setWinReason("The AI ran out of characters to guess from!");
+                setGameState(GameState.GAME_OVER);
+                setIsLoading(false);
+                return;
+            }
+
+            // AI generates a question with intelligent, feedback-driven retry logic
+            const MAX_AI_RETRIES = 3;
+            let retryReason: string | undefined = undefined;
+
+            for (let attempt = 1; attempt <= MAX_AI_RETRIES; attempt++) {
+                try {
+                    const { question, analysis } = await geminiService.getAIQuestionAndAnalysis(
+                        aiRemainingChars,
+                        messages,
+                        retryReason,
+                    );
+
+                    // The analysis here is used to validate the question's quality before it is asked.
+                    const positiveFeatures = analysis.filter((res) => res.has_feature).length;
+                    if (positiveFeatures === 0 || positiveFeatures === analysis.length) {
+                        retryReason =
+                            "The last question you asked was invalid because it did not eliminate any characters. You must ask a question that splits the remaining characters.";
+                        throw new Error("AI generated a non-discriminatory question.");
+                    }
+
+                    // Success: store both the question and the definitive analysis for the elimination phase.
+                    setLastAIQuestion(question);
+                    setLastAIAnalysis(analysis);
+                    setMessages((prev) => [...prev, { sender: "AI", text: question }]);
+                    setGameState(GameState.AI_TURN_WAITING_FOR_ANSWER);
+                    setIsLoading(false);
+                    return; // Exit successfully
+                } catch (error) {
+                    console.warn(`AI question generation attempt ${attempt} failed:`, error);
+
+                    // If it wasn't a non-discriminatory question error, set a generic retry reason
+                    if (error instanceof Error && error.message !== "AI generated a non-discriminatory question.") {
+                        retryReason = `The last attempt failed with an error: ${error.message}. Please try generating a completely different question.`;
+                    }
+
+                    if (attempt === MAX_AI_RETRIES) {
+                        // All retries failed, give up and pass the turn to the player.
+                        console.error("AI failed to generate a valid question after multiple retries.");
+                        setMessages((prev) => [
+                            ...prev,
+                            { sender: "SYSTEM", text: "The AI is having trouble thinking. Your turn!" },
+                        ]);
+                        setGameState(GameState.PLAYER_TURN_ASKING);
+                        setIsLoading(false);
+                        return;
+                    }
+                }
             }
         };
         handleAITurn();
@@ -393,7 +474,6 @@ export const useGameLogic = () => {
         isLoading,
         playerEliminatedChars,
         aiRemainingChars,
-        aiThinkingChars,
         aiStatus,
         aiStatusMessage,
         downloadProgress,

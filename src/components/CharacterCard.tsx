@@ -9,8 +9,6 @@ export type CharacterCardProps = Omit<ComponentPropsWithoutRef<"div">, "onClick"
     character: Character;
     /** Whether the card is flipped over (eliminated). */
     isEliminated: boolean;
-    /** Whether to show the "thinking" overlay. */
-    isThinking?: boolean;
     /** Callback function when the card is clicked. */
     onClick: (id: string) => void;
 };
@@ -19,7 +17,7 @@ export type CharacterCardProps = Omit<ComponentPropsWithoutRef<"div">, "onClick"
  * A card component that displays a character's image and name.
  * It can be flipped to show it has been eliminated.
  */
-function CharacterCard({ character, isEliminated, isThinking, onClick, className, ...props }: CharacterCardProps) {
+function CharacterCard({ character, isEliminated, onClick, className, ...props }: CharacterCardProps) {
     const containerClasses = `${styles.flipContainer} ${isEliminated ? styles.isFlipped : ""}`;
 
     const handleClick = useCallback(() => {
@@ -53,7 +51,6 @@ function CharacterCard({ character, isEliminated, isThinking, onClick, className
                     <div className={styles.cardNameWrapper}>
                         <p className={styles.cardName}>{character.name}</p>
                     </div>
-                    {isThinking && <div className={styles.thinkingOverlay}></div>}
                 </div>
 
                 {/* Back */}
