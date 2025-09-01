@@ -28,9 +28,10 @@
 	flex-direction: column;
 	border-radius: var(--border-radius-md);
 	overflow: hidden;
-	background-color: var(--color-surface-2);
-	border: 2px solid var(--color-surface-3);
+	background-color: var(--color-surface-glass);
+	border: 1px solid var(--color-border-glass);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+	backdrop-filter: blur(calc(var(--blur-glass) / 2));
 }
 
 .cardImage {
@@ -46,7 +47,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background-color: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(var(--blur-glass));
 }
 
 .analysisOverlay svg {
@@ -57,11 +58,11 @@
 }
 
 .analysisOverlayPositive {
-	color: var(--color-success);
+	background-color: rgba(34, 255, 123, 0.4);
 }
 
 .analysisOverlayNegative {
-	color: var(--color-error);
+	background-color: rgba(255, 68, 106, 0.4);
 }
 
 .cardNameWrapper {
@@ -87,7 +88,7 @@
 	transform: rotateY(180deg);
 	align-items: center;
 	justify-content: center;
-	background-color: var(--color-primary-dark);
+	background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
 	border-color: var(--color-primary);
 }
 

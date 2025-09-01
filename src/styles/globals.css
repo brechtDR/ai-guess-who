@@ -1,21 +1,23 @@
-:root {
-	/* Colors */
-	--color-background: #111827; /* slate-900 */
-	--color-surface-1: #1f2937; /* slate-800 */
-	--color-surface-2: #374151; /* slate-700 */
-	--color-surface-3: #4b5563; /* slate-600 */
-	--color-text-primary: #f9fafb; /* gray-50 */
-	--color-text-secondary: #9ca3af; /* slate-400 */
-	--color-primary: #38bdf8; /* sky-400 */
-	--color-primary-dark: #0ea5e9; /* sky-500 */
-	--color-secondary: #0d9488; /* teal-600 */
-	--color-success: #22c55e; /* green-500 */
-	--color-error: #ef4444; /* red-500 */
-	--color-win: #4ade80; /* green-400 */
-	--color-lose: #f87171; /* red-400 */
 
-	/* Typography */
+:root {
+	/* New Futuristic/Glassmorphism Color Palette */
+	--color-background: #0d0f21;
+	--color-surface-glass: rgba(18, 24, 58, 0.5);
+	--color-border-glass: rgba(255, 255, 255, 0.15);
+	--color-border-glass-hover: rgba(255, 255, 255, 0.4);
+	--color-text-primary: #f0f4ff;
+	--color-text-secondary: #a9b6d6;
+	--color-primary: #00f6ff;
+	--color-primary-dark: #00c2cb;
+	--color-secondary: #d83ff3;
+	--color-success: #22ff7b;
+	--color-error: #ff446a;
+	--color-win: var(--color-success);
+	--color-lose: var(--color-error);
+
+	/* UI Properties */
 	--font-family-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	--blur-glass: 12px;
 
 	/* Spacing */
 	--space-1: 0.25rem;
@@ -48,27 +50,31 @@ body {
 }
 
 #root {
-	container-name: root;
-	container-type: inline-size;
 	height: 100%;
+	container-type: inline-size;
+	container-name: root;
 }
 
 body {
-	background-color: var(--color-background);
-	color: var(--color-text-primary);
 	font-family: var(--font-family-sans);
+	background-color: var(--color-background);
+	background-image: radial-gradient(circle at top right, rgba(216, 63, 243, 0.2), transparent 40%),
+	radial-gradient(circle at bottom left, rgba(0, 246, 255, 0.2), transparent 40%);
+	background-attachment: fixed;
+	color: var(--color-text-primary);
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+	text-shadow: 0 0 8px rgba(240, 244, 255, 0.1);
 }
 
 @keyframes fadeIn {
 	from {
-		transform: scale(0.95);
 		opacity: 0;
+		transform: scale(0.95);
 	}
 	to {
-		transform: scale(1);
 		opacity: 1;
+		transform: scale(1);
 	}
 }
 
@@ -89,12 +95,12 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-	background: var(--color-surface-1);
+	background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
+	background: var(--color-border-glass);
 	border-radius: var(--border-radius-md);
-	background: var(--color-surface-3);
 }
 
 ::-webkit-scrollbar-thumb:hover {

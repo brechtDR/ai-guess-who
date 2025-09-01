@@ -1,33 +1,36 @@
+
 .overlay {
-	display: flex;
-	z-index: 50;
 	position: fixed;
+	inset: 0;
+	background-color: rgba(13, 15, 33, 0.7);
+	backdrop-filter: blur(8px);
+	display: flex;
 	align-items: center;
 	justify-content: center;
-	inset: 0;
-	backdrop-filter: blur(4px);
-	background-color: rgba(0, 0, 0, 0.7);
+	z-index: 50;
 	animation: fadeIn 0.3s ease-out;
 }
 
 .dialog {
+	background-color: var(--color-surface-glass);
+	border: 1px solid var(--color-border-glass);
+	backdrop-filter: blur(var(--blur-glass));
+	border-radius: var(--border-radius-lg);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+	padding: var(--space-8);
+	text-align: center;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	width: 500px;
-	max-width: 90vw;
-	padding: var(--space-8);
 	gap: var(--space-4);
-	border: 1px solid var(--color-surface-2);
-	border-radius: var(--border-radius-lg);
-	background-color: var(--color-surface-1);
-	box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-	text-align: center;
+	max-width: 90vw;
+	width: 500px;
 }
 
 .title {
-	font-weight: 800;
 	font-size: 2.25rem;
+	font-weight: 800;
+	text-shadow: 0 0 12px currentColor;
 }
 
 .winTitle {
@@ -39,25 +42,26 @@
 }
 
 .reason {
-	max-width: 400px;
 	color: var(--color-text-secondary);
 	font-size: 1.1rem;
+	max-width: 400px;
 }
 
 .playAgainButton {
 	margin-top: var(--space-4);
-	padding: var(--space-3) var(--space-6);
-	border: none;
-	border-radius: var(--border-radius-md);
 	background-color: var(--color-primary-dark);
 	color: var(--color-text-primary);
 	font-weight: 700;
+	padding: var(--space-3) var(--space-6);
+	border-radius: var(--border-radius-md);
 	font-size: 1.1rem;
-	cursor: pointer;
 	transition: var(--transition-fast);
+	border: none;
+	cursor: pointer;
 }
 
 .playAgainButton:hover {
 	transform: scale(1.05);
 	background-color: var(--color-primary);
+	box-shadow: 0 0 16px var(--color-primary);
 }

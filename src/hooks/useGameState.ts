@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import * as geminiService from "../services/geminiService";
 import { GameState, type Character, type EliminationAnalysisResult, type GameWinner, type Message } from "../types";
 

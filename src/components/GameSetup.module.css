@@ -19,9 +19,10 @@
 	font-size: 3rem;
 	font-weight: 800;
 	margin-bottom: var(--space-2);
-	background: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
+	background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
+	filter: drop-shadow(0 0 10px var(--color-primary));
 }
 
 @media (min-width: 768px) {
@@ -81,10 +82,11 @@
 
 .progressBarContainer {
 	flex-grow: 1;
-	background-color: var(--color-surface-2);
+	background-color: rgba(0, 0, 0, 0.2);
 	border-radius: var(--border-radius-md);
 	height: 12px;
 	overflow: hidden;
+	border: 1px solid var(--color-border-glass);
 }
 
 .progressBar {
@@ -93,6 +95,7 @@
 	background-color: var(--color-primary);
 	border-radius: var(--border-radius-md);
 	transition: width 0.3s ease-in-out;
+	box-shadow: 0 0 8px var(--color-primary);
 }
 
 .progressPercentage {
@@ -105,7 +108,7 @@
 
 .errorText {
 	color: var(--color-error);
-	background-color: rgba(239, 68, 68, 0.1);
+	background-color: rgba(255, 68, 106, 0.1);
 	padding: var(--space-3);
 	border-radius: var(--border-radius-md);
 	border: 1px solid var(--color-error);
@@ -134,8 +137,10 @@
 }
 
 .optionCard {
-	background-color: var(--color-surface-1);
-	border: 2px solid var(--color-surface-2);
+	background-color: var(--color-surface-glass);
+	border: 1px solid var(--color-border-glass);
+	backdrop-filter: blur(var(--blur-glass));
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 	border-radius: var(--border-radius-lg);
 	padding: var(--space-8);
 	display: flex;
@@ -150,9 +155,9 @@
 }
 
 .optionCard:hover:not(:disabled) {
-	border-color: var(--color-primary);
+	border-color: var(--color-border-glass-hover);
 	transform: translateY(-5px);
-	background-color: var(--color-surface-2);
+	box-shadow: 0 0 16px var(--color-primary), 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .optionCard:disabled {
@@ -165,6 +170,7 @@
 	height: 4rem; /* h-16 */
 	color: var(--color-primary);
 	margin-bottom: var(--space-4);
+	filter: drop-shadow(0 0 8px var(--color-primary));
 }
 
 .cardTitle {
@@ -180,8 +186,9 @@
 .settingsContainer {
 	margin-top: 3rem;
 	padding: var(--space-6);
-	background-color: var(--color-surface-1);
-	border: 1px solid var(--color-surface-2);
+	background-color: var(--color-surface-glass);
+	border: 1px solid var(--color-border-glass);
+	backdrop-filter: blur(var(--blur-glass));
 	border-radius: var(--border-radius-lg);
 	width: 100%;
 	max-width: 56rem;

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+// FIX: Import React to resolve 'Cannot find namespace React' errors.
+import React, { useCallback, useEffect, useState } from "react";
 import * as geminiService from "../services/geminiService";
 import { GameState, type Character, type EliminationAnalysisResult, type Message } from "../types";
 
