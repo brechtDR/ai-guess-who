@@ -1,16 +1,32 @@
-import React from "react";
-import { type Character } from "../types";
+import { useMemo } from "react";
+import { type Character, type EliminationAnalysisResult } from "../types";
 import CharacterCard from "./CharacterCard";
 import styles from "./GameBoard.module.css";
 
-type GameBoardProps = {
+export type GameBoardProps = {
+    /** The full list of characters to display on the board. */
     characters: Character[];
+    /** A set of IDs for characters that should be shown as eliminated. */
     eliminatedChars: Set<string>;
+    /** A callback function for when a character card is clicked. */
     onCardClick?: (id: string) => void;
-    thinkingChars?: Set<string>;
+    /** The AI's analysis of the characters for the current question. */
+    analysis?: EliminationAnalysisResult[];
 };
 
-function GameBoard({ characters, eliminatedChars, onCardClick = () => {}, thinkingChars = new Set() }: GameBoardProps) {
+/**
+ * Renders a grid of CharacterCard components for the game board.
+ */
+function GameBoard({ characters, eliminatedChars, onCardClick = () => {}, analysis }: GameBoardProps) {
+    const analysisMap = useMemo(() => {
+        if (!analysis) return null;
+        const map = new Map<string, boolean>();
+        for (const result of analysis) {
+            map.set(result.id, result.has_feature);
+        }
+        return map;
+    }, [analysis]);
+
     return (
         <div className={styles.boardContainer}>
             <div className={styles.boardGrid}>
@@ -19,8 +35,8 @@ function GameBoard({ characters, eliminatedChars, onCardClick = () => {}, thinki
                         key={char.id}
                         character={char}
                         isEliminated={eliminatedChars.has(char.id)}
-                        isThinking={thinkingChars.has(char.id)}
                         onClick={onCardClick}
+                        analysisResult={analysisMap ? (analysisMap.get(char.id) ?? null) : null}
                     />
                 ))}
             </div>

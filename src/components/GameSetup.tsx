@@ -19,17 +19,35 @@ function SetupOptionCard({ title, description, icon, ...props }: SetupOptionCard
     );
 }
 
-type GameSetupProps = {
+export type GameSetupProps = {
+    /** Callback to start the game with default characters. */
     onStartDefault: () => void;
+    /** Callback to navigate to the custom game creation screen. */
     onStartCustom: () => void;
+    /** Callback to start with a previously saved custom character set. */
     onStartWithCustomSet: () => void;
+    /** The current status of the AI model. */
     aiStatus: AIStatus;
+    /** A message describing the current AI status. */
     aiStatusMessage: string;
+    /** The download progress of the AI model (0-100). */
     downloadProgress: number | null;
+    /** Whether the default character data (with blobs) has been loaded. */
     hasDefaultChars: boolean;
+    /** Whether a custom character set has been saved by the user. */
     hasCustomSet: boolean;
+    /** Whether the app is in a general loading state. */
+    isLoading: boolean;
+    /** Whether the AI analysis review mode is enabled. */
+    isReviewModeEnabled: boolean;
+    /** Callback to set the AI analysis review mode. */
+    onSetReviewMode: (isEnabled: boolean) => void;
 };
 
+/**
+ * The initial setup screen where the player can choose the game mode.
+ * It also displays the loading status of the on-device AI model.
+ */
 function GameSetup({
     onStartDefault,
     onStartCustom,
@@ -39,9 +57,13 @@ function GameSetup({
     downloadProgress,
     hasDefaultChars,
     hasCustomSet,
+    isLoading,
+    isReviewModeEnabled,
+    onSetReviewMode,
 }: GameSetupProps) {
     const isReady = aiStatus === AIStatus.READY;
-    const defaultGameDisabled = !isReady || !hasDefaultChars;
+    const defaultGameDisabled = !isReady || !hasDefaultChars || isLoading;
+    const customGameDisabled = !isReady || isLoading;
 
     const [showComplete, setShowComplete] = useState(false);
     const prevAiStatus = useRef(aiStatus);
@@ -58,7 +80,7 @@ function GameSetup({
     const renderStatus = () => {
         if (showComplete) {
             return (
-                <div className={`${styles.statusContainer} ${styles.statusComplete}`}>
+                <div className={`${styles.statusContainer} ${styles.statusComplete}`} role="status">
                     <CheckCircleIcon />
                     <p className={styles.subtitle}>AI Model Ready!</p>
                 </div>
@@ -67,19 +89,20 @@ function GameSetup({
 
         switch (aiStatus) {
             case AIStatus.INITIALIZING:
-                return (
-                    <div className={styles.statusContainer}>
-                        <SpinnerIcon className={styles.spinner} />
-                        <p className={styles.subtitle}>{aiStatusMessage}</p>
-                    </div>
-                );
             case AIStatus.DOWNLOADING:
                 return (
-                    <div className={styles.statusContainer}>
+                    <div className={styles.statusContainer} role="status">
+                        {aiStatus === AIStatus.INITIALIZING && <SpinnerIcon className={styles.spinner} />}
                         <p className={styles.subtitle}>{aiStatusMessage}</p>
-                        {downloadProgress !== null && (
+                        {aiStatus === AIStatus.DOWNLOADING && downloadProgress !== null && (
                             <div className={styles.progressWrapper}>
-                                <div className={styles.progressBarContainer}>
+                                <div
+                                    className={styles.progressBarContainer}
+                                    aria-label={`Downloading AI Model: ${Math.floor(downloadProgress)}%`}
+                                    aria-valuenow={downloadProgress}
+                                    aria-valuemin={0}
+                                    aria-valuemax={100}
+                                >
                                     <div className={styles.progressBar} style={{ width: `${downloadProgress}%` }}></div>
                                 </div>
                                 <span className={styles.progressPercentage}>{Math.floor(downloadProgress)}%</span>
@@ -90,13 +113,13 @@ function GameSetup({
             case AIStatus.UNAVAILABLE:
             case AIStatus.ERROR:
                 return (
-                    <div className={styles.statusContainer}>
+                    <div className={styles.statusContainer} role="alert">
                         <p className={styles.errorText}>{aiStatusMessage}</p>
                     </div>
                 );
             case AIStatus.READY:
                 return !hasDefaultChars ? (
-                    <div className={styles.statusContainer}>
+                    <div className={styles.statusContainer} role="status">
                         <SpinnerIcon className={styles.spinner} />
                         <p className={styles.subtitle}>Loading character data...</p>
                     </div>
@@ -118,18 +141,18 @@ function GameSetup({
             <div className={`${styles.optionsGrid} ${hasCustomSet ? styles.hasThree : ""}`}>
                 <SetupOptionCard
                     title="Play Default Game"
-                    description="Jump right in with a pre-defined set of 5 characters."
+                    description="Jump right in with a random set of 5 characters."
                     icon={<UsersIcon />}
                     onClick={onStartDefault}
                     disabled={defaultGameDisabled}
                 />
                 {hasCustomSet && (
                     <SetupOptionCard
-                        title="Replay Custom"
+                        title="Play With Custom Set"
                         description="Use the last set of characters you created."
                         icon={<PlayAgainIcon />}
                         onClick={onStartWithCustomSet}
-                        disabled={!isReady}
+                        disabled={customGameDisabled}
                     />
                 )}
                 <SetupOptionCard
@@ -137,8 +160,26 @@ function GameSetup({
                     description="Use your camera to create your own set of 5 characters."
                     icon={<CameraIcon />}
                     onClick={onStartCustom}
-                    disabled={!isReady}
+                    disabled={customGameDisabled}
                 />
+            </div>
+
+            <div className={styles.settingsContainer}>
+                <h3 className={styles.settingsTitle}>Game Options</h3>
+                <label className={styles.settingLabel}>
+                    <input
+                        type="checkbox"
+                        className={styles.settingCheckbox}
+                        checked={isReviewModeEnabled}
+                        onChange={(e) => onSetReviewMode(e.target.checked)}
+                        disabled={!isReady}
+                    />
+                    Enable AI Analysis Review
+                </label>
+                <p className={styles.settingDescription}>
+                    See how the AI analyzes its board before you answer. This makes the game more transparent but adds
+                    an extra step to the AI's turn.
+                </p>
             </div>
         </div>
     );

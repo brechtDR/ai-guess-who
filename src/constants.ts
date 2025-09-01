@@ -1,17 +1,13 @@
 import { type Character } from "./types";
 
-// export const DEFAULT_CHARACTERS: Character[] = [
-//     { id: "alex", name: "Alex", image: "/images/alex.png" },
-//     { id: "bella", name: "Bella", image: "/images/bella.png" },
-//     { id: "charlie", name: "Charlie", image: "/images/charlie.png" },
-//     { id: "diana", name: "Diana", image: "/images/diana.png" },
-//     { id: "ethan", name: "Ethan", image: "/images/ethan.png" },
-// ];
-
 export const DEFAULT_CHARACTERS: Character[] = [
-    { id: "alex", name: "Alex", image: "/ai-guess-who/images/unsplash/alex.jpg" },
-    { id: "bella", name: "Bella", image: "/ai-guess-who/images/unsplash/bella.jpg" },
-    { id: "charlie", name: "Charlie", image: "/ai-guess-who/images/unsplash/charlie.jpg" },
-    { id: "diana", name: "Diana", image: "/ai-guess-who/images/unsplash/diana.jpg" },
-    { id: "ethan", name: "Ethan", image: "/ai-guess-who/images/unsplash/ethan.jpg" },
+    { id: "Alex", name: "Alex", image: "/ai-guess-who/images/generated/Alex.jpeg" },
+    { id: "Brad", name: "Brad", image: "/ai-guess-who/images/generated/Brad.jpeg" },
+    { id: "Frank", name: "Frank", image: "/ai-guess-who/images/generated/Frank.jpeg" },
+    { id: "Genna", name: "Genna", image: "/ai-guess-who/images/generated/Genna.jpeg" },
+    { id: "Gina", name: "Gina", image: "/ai-guess-who/images/generated/Gina.jpeg" },
+    { id: "Lucy", name: "Lucy", image: "/ai-guess-who/images/generated/Lucy.jpeg" },
+    { id: "Paula", name: "Paula", image: "/ai-guess-who/images/generated/Paula.jpeg" },
+    { id: "Roger", name: "Roger", image: "/ai-guess-who/images/generated/Roger.jpeg" },
+    { id: "Tom", name: "Tom", image: "/ai-guess-who/images/generated/Tom.jpeg" },
 ];
