@@ -444,6 +444,7 @@ export const useGameLogic = () => {
             // AI generates a question with intelligent, feedback-driven retry logic
             const MAX_AI_RETRIES = 3;
             let retryReason: string | undefined = undefined;
+            let lastFailedQuestion: string | undefined = undefined;
 
             for (let attempt = 1; attempt <= MAX_AI_RETRIES; attempt++) {
                 try {
@@ -451,6 +452,7 @@ export const useGameLogic = () => {
                         aiRemainingChars,
                         messages,
                         retryReason,
+                        lastFailedQuestion,
                     );
 
                     // The analysis here is used to validate the question's quality before it is asked.
@@ -458,6 +460,7 @@ export const useGameLogic = () => {
                     if (positiveFeatures === 0 || positiveFeatures === analysis.length) {
                         retryReason =
                             "The last question you asked was invalid because it did not eliminate any characters. You must ask a question that splits the remaining characters.";
+                        lastFailedQuestion = question;
                         throw new Error("AI generated a non-discriminatory question.");
                     }
 

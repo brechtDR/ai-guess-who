@@ -14,17 +14,43 @@ export const getSystemPrompt = (): string => {
  * analysis of the remaining characters in a single, consistent step.
  * @param characters The list of remaining characters for the AI to consider.
  * @param retryReason An optional string explaining why a previous attempt failed.
+ * @param lastFailedQuestion The specific question that failed on the previous attempt.
  * @returns The turn-specific prompt string for generating a question and analysis.
  */
-export const getAIQuestionAndAnalysisPrompt = (characters: Character[], retryReason?: string): string => {
+export const getAIQuestionAndAnalysisPrompt = (
+    characters: Character[],
+    retryReason?: string,
+    lastFailedQuestion?: string,
+): string => {
     const characterData = characters.map((c) => ({ id: c.id, name: c.name }));
 
-    const retryInstruction = retryReason
-        ? `
-**IMPORTANT - PREVIOUS ATTEMP FAILED:**
-Your last attempt was unsuccessful. Reason: "${retryReason}".
-This is a critical mistake. You MUST choose a DIFFERENT feature for your question this time. Analyze the characters again from scratch and find a valid feature that splits the group.`
+    const failedQuestionInstruction = lastFailedQuestion
+        ? `The specific question that failed was: "${lastFailedQuestion}". Do not ask this question again or any minor variation of it. The visual feature you based this question on is invalid. You must choose a completely different visual feature.`
         : "";
+
+    let retryInstruction = "";
+    if (retryReason) {
+        // Handle stalemates when few characters are left
+        if (characters.length <= 3) {
+            retryInstruction = `
+**IMPORTANT - STALEMATE DETECTED:**
+Your last attempt was unsuccessful because the question did not split the remaining characters. This is a common stalemate when characters are very similar. Your strategy MUST change.
+**Instead of a broad feature, you must ask about a more specific, unique, or combined visual feature to find a difference.**
+*   **Look closer at the images.** Find a single detail that separates at least one character from the others.
+*   **Good Example of being specific:** Instead of asking "Does your character wear a hat?" (if both do), ask "Is your character wearing a *baseball cap*?" (if one has a cap and the other has a different type of hat).
+*   **Good Example of finding a unique identifier:** "Is your character holding something in their hands?"
+*   **Bad Example (still too broad):** "Does your character have hair?"
+${failedQuestionInstruction}
+Analyze the characters again from scratch. Find a specific, distinguishing detail and base your new question on that.`;
+        } else {
+            // Standard retry logic for larger groups of characters
+            retryInstruction = `
+**IMPORTANT - PREVIOUS ATTEMPT FAILED:**
+Your last attempt was unsuccessful. Reason: "${retryReason}".
+${failedQuestionInstruction}
+This is a critical mistake. You MUST choose a DIFFERENT feature for your question this time. Analyze the characters again from scratch and find a valid feature that splits the group.`;
+        }
+    }
 
     return `You are an expert "Guess Who?" player. It is your turn to ask a question.
 

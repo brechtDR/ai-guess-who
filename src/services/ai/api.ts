@@ -77,12 +77,14 @@ export async function getAnswerToPlayerQuestion(character: Character, question: 
  * @param characters The list of remaining possible characters.
  * @param messages The conversation history.
  * @param retryReason An optional reason explaining why a previous attempt failed.
+ * @param lastFailedQuestion The specific question that failed previously.
  * @returns A promise that resolves to an object containing the AI's question and its analysis.
  */
 export async function getAIQuestionAndAnalysis(
     characters: Character[],
     messages: Message[],
     retryReason?: string,
+    lastFailedQuestion?: string,
 ): Promise<AIQuestionAndAnalysis> {
     const session = await getSession();
 
@@ -99,7 +101,7 @@ export async function getAIQuestionAndAnalysis(
         });
 
     const systemPrompt = getSystemPrompt();
-    const turnPrompt = getAIQuestionAndAnalysisPrompt(characters, retryReason);
+    const turnPrompt = getAIQuestionAndAnalysisPrompt(characters, retryReason, lastFailedQuestion);
     const userContent: any[] = [{ type: "text", value: `${systemPrompt}\n\n${turnPrompt}` }];
 
     // Add all remaining character images for analysis.

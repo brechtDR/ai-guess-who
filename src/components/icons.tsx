@@ -183,19 +183,18 @@ export function PlayAgainIcon() {
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
             fill="none"
-            stroke="currentColor"
+            viewBox="0 0 24 24"
             strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            stroke="currentColor"
+            width={24}
+            height={24}
         >
-            <path d="M21.5 2v6h-6"></path>
-            <path d="M2.5 22v-6h6"></path>
-            <path d="M22 11.5A10 10 0 0 0 3.5 12.5"></path>
-            <path d="M2 12.5a10 10 0 0 0 18.5-1"></path>
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+            />
         </svg>
     );
 }
