@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSpeechToText } from "../hooks/useSpeechToText";
 import { GameState, type Message } from "../types";
 import styles from "./ChatControls.module.css";
@@ -17,6 +17,8 @@ export type ChatControlsProps = {
     onEndTurn: () => void;
     /** Callback for when the player answers the AI's question. */
     onPlayerAnswer: (answer: "Yes" | "No") => void;
+    /** Callback for when the player confirms they have reviewed the AI analysis. */
+    onConfirmAIAnalysis: () => void;
 };
 
 /**
@@ -30,6 +32,7 @@ function ChatControls({
     onPlayerQuestion,
     onEndTurn,
     onPlayerAnswer,
+    onConfirmAIAnalysis,
 }: ChatControlsProps) {
     const [inputValue, setInputValue] = useState("");
     const chatLogRef = useRef<HTMLDivElement>(null);
@@ -83,6 +86,7 @@ function ChatControls({
 
     const showInputForm = gameState === GameState.PLAYER_TURN_ASKING;
     const showEndTurnButton = gameState === GameState.PLAYER_TURN_ELIMINATING;
+    const showConfirmAnalysisButton = gameState === GameState.PLAYER_REVIEWING_AI_ANALYSIS;
     const showAnswerButtons = gameState === GameState.AI_TURN_WAITING_FOR_ANSWER;
 
     const isTranscribing = micStatus === "transcribing";
@@ -137,6 +141,16 @@ function ChatControls({
                         disabled={isLoading}
                     >
                         End Turn
+                    </button>
+                )}
+
+                {showConfirmAnalysisButton && (
+                    <button
+                        onClick={onConfirmAIAnalysis}
+                        className={`${styles.actionButton} ${styles.continueButton}`}
+                        disabled={isLoading}
+                    >
+                        Continue
                     </button>
                 )}
 

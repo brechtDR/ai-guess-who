@@ -12,6 +12,7 @@ import {
 } from "../types";
 
 const FINAL_GUESS_REGEX = /^(?:is it|is the person|is the character|is your? character)\s+(.*?)\??$/i;
+const REVIEW_MODE_STORAGE_KEY = "ai-guess-who-review-mode";
 
 /**
  * A utility function to shuffle an array using the Fisher-Yates algorithm.
@@ -53,6 +54,17 @@ export const useGameLogic = () => {
     const [aiStatus, setAiStatus] = useState<AIStatus>(AIStatus.INITIALIZING);
     const [aiStatusMessage, setAiStatusMessage] = useState<string>("Initializing AI...");
     const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
+
+    // Game Settings
+    const [isReviewModeEnabled, setIsReviewModeEnabled] = useState<boolean>(() => {
+        try {
+            // Default to true for a better first-time experience
+            const storedValue = localStorage.getItem(REVIEW_MODE_STORAGE_KEY);
+            return storedValue ? JSON.parse(storedValue) : true;
+        } catch {
+            return true;
+        }
+    });
 
     // Pre-loaded data state
     const [defaultCharsWithBlobs, setDefaultCharsWithBlobs] = useState<Character[] | null>(null);
@@ -282,6 +294,13 @@ export const useGameLogic = () => {
     }, []);
 
     /**
+     * Confirms the player has reviewed the AI's analysis and moves to the answer state.
+     */
+    const handleConfirmAIAnalysis = useCallback(() => {
+        setGameState(GameState.AI_TURN_WAITING_FOR_ANSWER);
+    }, []);
+
+    /**
      * Handles the player's "Yes" or "No" answer to the AI's question and triggers AI eliminations.
      */
     const handlePlayerAnswer = useCallback(
@@ -381,6 +400,18 @@ export const useGameLogic = () => {
         [lastAIQuestion, playerSecret, aiRemainingChars, isAIFinalGuess, lastAIAnalysis],
     );
 
+    /**
+     * Toggles the review mode setting and saves it to local storage.
+     */
+    const handleSetReviewMode = useCallback((isEnabled: boolean) => {
+        setIsReviewModeEnabled(isEnabled);
+        try {
+            localStorage.setItem(REVIEW_MODE_STORAGE_KEY, JSON.stringify(isEnabled));
+        } catch (e) {
+            console.error("Failed to save review mode setting", e);
+        }
+    }, []);
+
     // Effect to handle the AI's turn logic
     useEffect(() => {
         const handleAITurn = async () => {
@@ -430,11 +461,30 @@ export const useGameLogic = () => {
                         throw new Error("AI generated a non-discriminatory question.");
                     }
 
-                    // Success: store both the question and the definitive analysis for the elimination phase.
+                    // Success: store question and analysis, then move to the appropriate next state.
                     setLastAIQuestion(question);
                     setLastAIAnalysis(analysis);
-                    setMessages((prev) => [...prev, { sender: "AI", text: question }]);
-                    setGameState(GameState.AI_TURN_WAITING_FOR_ANSWER);
+
+                    if (isReviewModeEnabled) {
+                        setMessages((prev) => [
+                            ...prev,
+                            { sender: "AI", text: question },
+                            {
+                                sender: "SYSTEM",
+                                text: "Here is how the AI analyzed the remaining characters. Review its work, then click 'Continue' to provide your answer.",
+                            },
+                        ]);
+                        setGameState(GameState.PLAYER_REVIEWING_AI_ANALYSIS);
+                    } else {
+                        // If review mode is off, go straight to waiting for an answer.
+                        setMessages((prev) => [
+                            ...prev,
+                            { sender: "AI", text: question },
+                            { sender: "SYSTEM", text: "It's your turn to answer." },
+                        ]);
+                        setGameState(GameState.AI_TURN_WAITING_FOR_ANSWER);
+                    }
+
                     setIsLoading(false);
                     return; // Exit successfully
                 } catch (error) {
@@ -460,7 +510,7 @@ export const useGameLogic = () => {
             }
         };
         handleAITurn();
-    }, [gameState, aiRemainingChars, messages]);
+    }, [gameState, aiRemainingChars, messages, isReviewModeEnabled]);
 
     return {
         // State
@@ -479,6 +529,8 @@ export const useGameLogic = () => {
         downloadProgress,
         defaultCharsWithBlobs,
         hasCustomSet,
+        lastAIAnalysis,
+        isReviewModeEnabled,
 
         // State Setters
         setGameState,
@@ -492,5 +544,7 @@ export const useGameLogic = () => {
         handlePlayerQuestion,
         handleEndTurn,
         handlePlayerAnswer,
+        handleConfirmAIAnalysis,
+        handleSetReviewMode,
     };
 };

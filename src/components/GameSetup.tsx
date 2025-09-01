@@ -38,6 +38,10 @@ export type GameSetupProps = {
     hasCustomSet: boolean;
     /** Whether the app is in a general loading state. */
     isLoading: boolean;
+    /** Whether the AI analysis review mode is enabled. */
+    isReviewModeEnabled: boolean;
+    /** Callback to set the AI analysis review mode. */
+    onSetReviewMode: (isEnabled: boolean) => void;
 };
 
 /**
@@ -54,6 +58,8 @@ function GameSetup({
     hasDefaultChars,
     hasCustomSet,
     isLoading,
+    isReviewModeEnabled,
+    onSetReviewMode,
 }: GameSetupProps) {
     const isReady = aiStatus === AIStatus.READY;
     const defaultGameDisabled = !isReady || !hasDefaultChars || isLoading;
@@ -156,6 +162,24 @@ function GameSetup({
                     onClick={onStartCustom}
                     disabled={customGameDisabled}
                 />
+            </div>
+
+            <div className={styles.settingsContainer}>
+                <h3 className={styles.settingsTitle}>Game Options</h3>
+                <label className={styles.settingLabel}>
+                    <input
+                        type="checkbox"
+                        className={styles.settingCheckbox}
+                        checked={isReviewModeEnabled}
+                        onChange={(e) => onSetReviewMode(e.target.checked)}
+                        disabled={!isReady}
+                    />
+                    Enable AI Analysis Review
+                </label>
+                <p className={styles.settingDescription}>
+                    See how the AI analyzes its board before you answer. This makes the game more transparent but adds
+                    an extra step to the AI's turn.
+                </p>
             </div>
         </div>
     );

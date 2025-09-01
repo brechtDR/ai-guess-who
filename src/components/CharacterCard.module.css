@@ -40,6 +40,30 @@
 	flex-grow: 1;
 }
 
+.analysisOverlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: rgba(0, 0, 0, 0.6);
+}
+
+.analysisOverlay svg {
+	width: 50%;
+	height: 50%;
+	stroke: white;
+	filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
+}
+
+.analysisOverlayPositive {
+	color: var(--color-success);
+}
+
+.analysisOverlayNegative {
+	color: var(--color-error);
+}
+
 .cardNameWrapper {
 	position: absolute;
 	bottom: 0;

@@ -1,21 +1,22 @@
+
 .controlsContainer {
-	display: flex;
-	flex-shrink: 0; /* Prevent from shrinking */
-	flex-direction: column;
-	padding: var(--space-3);
-	gap: var(--space-3);
-	border-radius: var(--border-radius-lg);
 	background-color: var(--color-surface-1);
+	border-radius: var(--border-radius-lg);
+	padding: var(--space-3);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
 	box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.2);
+	flex-shrink: 0; /* Prevent from shrinking */
 }
 
 .chatLog {
-	display: flex;
 	flex-grow: 1;
-	flex-direction: column;
-	padding-right: var(--space-2);
 	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
 	gap: var(--space-2);
+	padding-right: var(--space-2);
 }
 
 .message {
@@ -28,27 +29,27 @@
 }
 
 .playerMessage {
-	align-self: flex-end;
-	border-bottom-right-radius: var(--border-radius-sm);
 	background-color: var(--color-primary-dark);
 	color: var(--color-text-primary);
+	align-self: flex-end;
+	border-bottom-right-radius: var(--border-radius-sm);
 }
 
 .aiMessage {
-	align-self: flex-start;
-	border-bottom-left-radius: var(--border-radius-sm);
 	background-color: var(--color-surface-2);
 	color: var(--color-text-primary);
+	align-self: flex-start;
+	border-bottom-left-radius: var(--border-radius-sm);
 }
 
 .systemMessage {
-	align-self: center;
-	width: 100%;
-	max-width: 100%;
-	padding: var(--space-1);
+	text-align: center;
 	color: var(--color-text-secondary);
 	font-size: 0.8rem;
-	text-align: center;
+	align-self: center;
+	max-width: 100%;
+	width: 100%;
+	padding: var(--space-1);
 }
 
 .loadingMessage {
@@ -56,32 +57,32 @@
 }
 
 .actionsContainer {
+	min-height: 44px; /* Height of the input form */
 	display: flex;
 	justify-content: center;
-	min-height: 44px; /* Height of the input form */
 }
 
 .inputForm {
 	display: flex;
 	align-items: center;
-	width: 100%;
 	gap: var(--space-2);
+	width: 100%;
 }
 
 .textInput {
 	flex-grow: 1;
-	padding: var(--space-2) var(--space-3);
+	background-color: var(--color-surface-2);
 	border: 1px solid var(--color-surface-3);
 	border-radius: var(--border-radius-md);
-	background-color: var(--color-surface-2);
+	padding: var(--space-2) var(--space-3);
 	color: var(--color-text-primary);
 	font-size: 1rem;
 	transition: var(--transition-fast);
 }
 
 .textInput:focus {
-	border-color: var(--color-primary);
 	outline: none;
+	border-color: var(--color-primary);
 	box-shadow: 0 0 0 2px var(--color-primary-dark);
 }
 
@@ -90,14 +91,14 @@
 }
 
 .iconButton {
-	display: flex;
 	flex-shrink: 0;
-	align-items: center;
-	justify-content: center;
 	width: 44px;
 	height: 44px;
-	border: none;
 	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: none;
 	cursor: pointer;
 	transition: var(--transition-fast);
 }
@@ -133,18 +134,18 @@
 }
 
 .actionButton {
-	padding: var(--space-2) var(--space-4);
 	border: none;
-	border-radius: var(--border-radius-md);
-	color: var(--color-text-primary);
 	font-weight: 700;
-	font-size: 1rem;
+	padding: var(--space-2) var(--space-4);
+	border-radius: var(--border-radius-md);
 	cursor: pointer;
 	transition: var(--transition-fast);
+	font-size: 1rem;
+	color: var(--color-text-primary);
 }
 .actionButton:disabled {
-	cursor: not-allowed;
 	opacity: 0.5;
+	cursor: not-allowed;
 }
 
 .endTurnButton {
@@ -155,6 +156,15 @@
 
 .endTurnButton:hover:not(:disabled) {
 	filter: brightness(1.1);
+}
+
+.continueButton {
+	width: 100%;
+	max-width: 20rem;
+	background-color: var(--color-primary-dark);
+}
+.continueButton:hover:not(:disabled) {
+	background-color: var(--color-primary);
 }
 
 .answerButtons {
@@ -184,15 +194,15 @@
 /* Mobile sticky footer */
 @media (max-width: 819px) {
 	.controlsContainer {
-		z-index: 10;
 		position: fixed;
-		right: 0;
 		bottom: 0;
 		left: 0;
+		right: 0;
+		z-index: 10;
+		border-bottom-left-radius: 0;
+		border-bottom-right-radius: 0;
 		height: 180px;
 		max-height: 30vh;
-		border-bottom-right-radius: 0;
-		border-bottom-left-radius: 0;
 	}
 }
 

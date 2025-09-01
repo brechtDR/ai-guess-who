@@ -25,6 +25,12 @@ export async function transcribeAudio(audioBlob: Blob): Promise<string> {
         },
     ];
     const result = await promiseWithTimeout(session.prompt(prompt), GENERAL_PROMPT_TIMEOUT_MS);
+
+    if (typeof result !== "string") {
+        console.error("Transcription result is not a string:", result);
+        throw new Error("AI transcription failed to return a valid text response.");
+    }
+
     return result.trim().replace(/"/g, "");
 }
 
@@ -40,7 +46,7 @@ export async function getAnswerToPlayerQuestion(character: Character, question: 
         throw new Error(`Image blob for ${character.name} is missing.`);
     }
 
-    const promptText = getAnswerToPlayerQuestionPrompt(question);
+    const promptText = getAnswerToPlayerQuestionPrompt(character, question);
     const prompt = [
         {
             role: "user",
@@ -56,6 +62,12 @@ export async function getAnswerToPlayerQuestion(character: Character, question: 
         session.prompt(prompt, { responseConstraint: schema }),
         GENERAL_PROMPT_TIMEOUT_MS,
     );
+
+    if (typeof result !== "string") {
+        console.error("Player question answer is not a string:", result);
+        throw new Error("AI failed to return a valid response for the player's question.");
+    }
+
     return JSON.parse(result) ? "Yes" : "No";
 }
 
@@ -116,8 +128,12 @@ export async function getAIQuestionAndAnalysis(
                             type: "boolean",
                             description: "Does this character have the feature asked about in the question?",
                         },
+                        reasoning: {
+                            type: "string",
+                            description: "A brief justification for the has_feature value.",
+                        },
                     },
-                    required: ["id", "name", "has_feature"],
+                    required: ["id", "name", "has_feature", "reasoning"],
                 },
             },
         },
@@ -128,6 +144,11 @@ export async function getAIQuestionAndAnalysis(
         session.prompt(prompt, { responseConstraint: schema }),
         GENERAL_PROMPT_TIMEOUT_MS,
     );
+
+    if (typeof result !== "string") {
+        console.error("AI question/analysis result is not a string:", result);
+        throw new Error("AI failed to return a valid JSON response for its turn.");
+    }
 
     // Developer-facing log for easier debugging
     console.log("%c[DEBUG] AI Question & Draft Analysis:", "color: #f59e0b; font-weight: bold;", JSON.parse(result));

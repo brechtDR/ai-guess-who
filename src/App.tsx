@@ -30,6 +30,8 @@ function App() {
         downloadProgress,
         defaultCharsWithBlobs,
         hasCustomSet,
+        lastAIAnalysis,
+        isReviewModeEnabled,
 
         // State Setters
         setGameState,
@@ -43,6 +45,8 @@ function App() {
         handlePlayerQuestion,
         handleEndTurn,
         handlePlayerAnswer,
+        handleConfirmAIAnalysis,
+        handleSetReviewMode,
     } = useGameLogic();
 
     const aiEliminatedChars = useMemo(() => {
@@ -64,6 +68,8 @@ function App() {
                         hasDefaultChars={!!defaultCharsWithBlobs}
                         hasCustomSet={hasCustomSet}
                         isLoading={isLoading}
+                        isReviewModeEnabled={isReviewModeEnabled}
+                        onSetReviewMode={handleSetReviewMode}
                     />
                 );
             case GameState.CUSTOM_SETUP:
@@ -72,6 +78,7 @@ function App() {
             case GameState.PLAYER_TURN_ASKING:
             case GameState.PLAYER_TURN_ELIMINATING:
             case GameState.AI_TURN:
+            case GameState.PLAYER_REVIEWING_AI_ANALYSIS:
             case GameState.AI_TURN_WAITING_FOR_ANSWER:
                 if (!playerSecret || !aiSecret || activeCharacters.length === 0) {
                     return (
@@ -115,7 +122,15 @@ function App() {
                                 <div className={styles.boardArea}>
                                     <div className={styles.boardWrapper}>
                                         <h2 className={styles.boardTitle}>AI's Board</h2>
-                                        <GameBoard characters={activeCharacters} eliminatedChars={aiEliminatedChars} />
+                                        <GameBoard
+                                            characters={activeCharacters}
+                                            eliminatedChars={aiEliminatedChars}
+                                            analysis={
+                                                gameState === GameState.PLAYER_REVIEWING_AI_ANALYSIS
+                                                    ? lastAIAnalysis
+                                                    : undefined
+                                            }
+                                        />
                                         <p className={styles.boardSubtext}>
                                             The AI eliminates characters from its own board.
                                         </p>
@@ -151,6 +166,7 @@ function App() {
                                     onPlayerQuestion={handlePlayerQuestion}
                                     onEndTurn={handleEndTurn}
                                     onPlayerAnswer={handlePlayerAnswer}
+                                    onConfirmAIAnalysis={handleConfirmAIAnalysis}
                                 />
                             </div>
                         </div>

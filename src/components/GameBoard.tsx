@@ -1,4 +1,5 @@
-import { type Character } from "../types";
+import { useMemo } from "react";
+import { type Character, type EliminationAnalysisResult } from "../types";
 import CharacterCard from "./CharacterCard";
 import styles from "./GameBoard.module.css";
 
@@ -9,12 +10,23 @@ export type GameBoardProps = {
     eliminatedChars: Set<string>;
     /** A callback function for when a character card is clicked. */
     onCardClick?: (id: string) => void;
+    /** The AI's analysis of the characters for the current question. */
+    analysis?: EliminationAnalysisResult[];
 };
 
 /**
  * Renders a grid of CharacterCard components for the game board.
  */
-function GameBoard({ characters, eliminatedChars, onCardClick = () => {} }: GameBoardProps) {
+function GameBoard({ characters, eliminatedChars, onCardClick = () => {}, analysis }: GameBoardProps) {
+    const analysisMap = useMemo(() => {
+        if (!analysis) return null;
+        const map = new Map<string, boolean>();
+        for (const result of analysis) {
+            map.set(result.id, result.has_feature);
+        }
+        return map;
+    }, [analysis]);
+
     return (
         <div className={styles.boardContainer}>
             <div className={styles.boardGrid}>
@@ -24,6 +36,7 @@ function GameBoard({ characters, eliminatedChars, onCardClick = () => {} }: Game
                         character={char}
                         isEliminated={eliminatedChars.has(char.id)}
                         onClick={onCardClick}
+                        analysisResult={analysisMap ? (analysisMap.get(char.id) ?? null) : null}
                     />
                 ))}
             </div>
