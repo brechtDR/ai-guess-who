@@ -64,7 +64,7 @@ body {
 	color: var(--color-text-primary);
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
-	text-shadow: 0 0 8px rgba(240, 244, 255, 0.1);
+	text-shadow: 0 0 3px rgba(240, 244, 255, 0.1);
 }
 
 @keyframes fadeIn {
