@@ -23,8 +23,9 @@ Because this project uses experimental web technology, a specific browser and co
 1.  **Browser**: You must use a browser that supports the on-device `LanguageModel` API, such as **Google Chrome Canary**.
 2.  **Enable Feature Flags**: Open your Chrome Canary browser and enable the following two flags by copying and pasting the URLs into your address bar, setting them to "Enabled", and restarting the browser.
 
-- `chrome://flags/#prompt-api-for-gemini-nano`
-- `chrome://flags/#optimization-guide-on-device-model`
+- `chrome://flags/#prompt-api-for-gemini-nano` (enabled)
+- `chrome://flags/#optimization-guide-on-device-model` (place in bypass)
+- `chrome://flags/#enable-experimental-web-platform-features` (enabled)
 
 ### First-Time Setup
 
