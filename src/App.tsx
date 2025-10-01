@@ -50,8 +50,8 @@ function App() {
     } = useGameLogic();
 
     const aiEliminatedChars = useMemo(() => {
-        const remainingIds = new Set(aiRemainingChars.map((c) => c.id));
-        return new Set(activeCharacters.filter((c) => !remainingIds.has(c.id)).map((c) => c.id));
+        const remainingIds = new Set(aiRemainingChars.map((c) => c.character_id));
+        return new Set(activeCharacters.filter((c) => !remainingIds.has(c.character_id)).map((c) => c.character_id));
     }, [aiRemainingChars, activeCharacters]);
 
     const renderContent = () => {

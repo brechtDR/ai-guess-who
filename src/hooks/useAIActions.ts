@@ -1,6 +1,6 @@
 // FIX: Import React to resolve 'Cannot find namespace React' errors.
 import React, { useCallback, useEffect, useState } from "react";
-import * as geminiService from "../services/geminiService";
+import * as geminiService from "../services/buildInAIService.ts";
 import { GameState, type Character, type EliminationAnalysisResult, type Message } from "../types";
 
 const FINAL_GUESS_REGEX = /^(?:is it|is the person|is the character|is your? character)\s+(.*?)\??$/i;
@@ -180,7 +180,7 @@ export const useAIActions = ({
                 });
             } else {
                 const eliminatedNames = aiRemainingChars
-                    .filter((c) => eliminatedIds.has(c.id))
+                    .filter((c) => eliminatedIds.has(c.character_id))
                     .map((c) => c.name)
                     .join(", ");
                 if (eliminatedNames) {
@@ -189,7 +189,7 @@ export const useAIActions = ({
                     addMessage({ sender: "SYSTEM", text: `AI did not eliminate anyone based on that answer.` });
                 }
 
-                const newRemainingChars = aiRemainingChars.filter((c) => !eliminatedIds.has(c.id));
+                const newRemainingChars = aiRemainingChars.filter((c) => !eliminatedIds.has(c.character_id));
                 setAiRemainingChars(newRemainingChars);
 
                 if (newRemainingChars.length === 0) {

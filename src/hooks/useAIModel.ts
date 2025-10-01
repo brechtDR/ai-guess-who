@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { DEFAULT_CHARACTERS } from "../constants";
-import * as geminiService from "../services/geminiService";
+import * as geminiService from "../services/buildInAIService.ts";
 import { AIStatus, type Character } from "../types";
 
 /**

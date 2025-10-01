@@ -22,7 +22,7 @@ export const getAIQuestionAndAnalysisPrompt = (
     retryReason?: string,
     lastFailedQuestion?: string,
 ): string => {
-    const characterData = characters.map((c) => ({ id: c.id, name: c.name }));
+    const characterData = characters.map((c) => ({ id: c.character_id, name: c.name }));
 
     const failedQuestionInstruction = lastFailedQuestion
         ? `The specific question that failed was: "${lastFailedQuestion}". Do not ask this question again or any minor variation of it. The visual feature you based this question on is invalid. You must choose a completely different visual feature.`

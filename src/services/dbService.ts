@@ -37,7 +37,7 @@ export async function saveCustomCharacters(characters: Character[]): Promise<voi
     characters.forEach((char) => {
         if (char.imageBlob) {
             const charToStore: StoredCharacter = {
-                id: char.id,
+                id: char.character_id,
                 name: char.name,
                 imageBlob: char.imageBlob,
             };

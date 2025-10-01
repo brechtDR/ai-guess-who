@@ -78,7 +78,7 @@ function CustomGameSetup({ onStartGame, onBack }: CustomGameSetupProps) {
                 if (!blob) return;
                 const imageUrl = URL.createObjectURL(blob);
                 const newChar: Character = {
-                    id: `custom_${Date.now()}`,
+                    character_id: `custom_${Date.now()}`,
                     name: personName,
                     image: imageUrl,
                     imageBlob: blob,
@@ -93,7 +93,7 @@ function CustomGameSetup({ onStartGame, onBack }: CustomGameSetupProps) {
     const removeCharacter = (id: string) => {
         setCharacters((prev) =>
             prev.filter((char) => {
-                if (char.id === id) {
+                if (char.character_id === id) {
                     URL.revokeObjectURL(char.image); // Clean up blob URL
                     return false;
                 }
@@ -141,7 +141,7 @@ function CustomGameSetup({ onStartGame, onBack }: CustomGameSetupProps) {
                                 <img src={characters[i].image} alt={characters[i].name} className={styles.photo} />
                                 <div className={styles.photoOverlay}>
                                     <button
-                                        onClick={() => removeCharacter(characters[i].id)}
+                                        onClick={() => removeCharacter(characters[i].character_id)}
                                         className={styles.removeButton}
                                         aria-label={`Remove ${characters[i].name}`}
                                     >

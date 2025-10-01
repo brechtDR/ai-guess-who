@@ -24,17 +24,17 @@ function CharacterCard({ character, isEliminated, onClick, analysisResult, class
     const containerClasses = `${styles.flipContainer} ${isEliminated ? styles.isFlipped : ""}`;
 
     const handleClick = useCallback(() => {
-        onClick(character.id);
-    }, [character.id, onClick]);
+        onClick(character.character_id);
+    }, [character.character_id, onClick]);
 
     const handleKeyDown = useCallback(
         (event: React.KeyboardEvent<HTMLDivElement>) => {
             if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
-                onClick(character.id);
+                onClick(character.character_id);
             }
         },
-        [character.id, onClick],
+        [character.character_id, onClick],
     );
 
     const renderAnalysisOverlay = () => {

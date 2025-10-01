@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import * as geminiService from "../services/geminiService";
+import * as geminiService from "../services/buildInAIService.ts";
 import { GameState, type Character, type Message } from "../types";
 
 const FINAL_GUESS_REGEX = /^(?:is it|is the person|is the character|is your? character)\s+(.*?)\??$/i;

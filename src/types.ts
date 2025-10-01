@@ -1,5 +1,5 @@
 export type Character = {
-    id: string;
+    character_id: string;
     name: string;
     image: string; // This will be a URL or a base64 string
     imageBlob?: Blob; // The actual image data for the AI

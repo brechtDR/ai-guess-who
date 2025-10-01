@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import * as geminiService from "../services/geminiService";
+import * as geminiService from "../services/buildInAIService.ts";
 
 type UseSpeechToTextOptions = {
     onTranscription: (text: string) => void;

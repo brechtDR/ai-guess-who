@@ -32,11 +32,11 @@ function GameBoard({ characters, eliminatedChars, onCardClick = () => {}, analys
             <div className={styles.boardGrid}>
                 {characters.map((char) => (
                     <CharacterCard
-                        key={char.id}
+                        key={char.character_id}
                         character={char}
-                        isEliminated={eliminatedChars.has(char.id)}
+                        isEliminated={eliminatedChars.has(char.character_id)}
                         onClick={onCardClick}
-                        analysisResult={analysisMap ? (analysisMap.get(char.id) ?? null) : null}
+                        analysisResult={analysisMap ? (analysisMap.get(char.character_id) ?? null) : null}
                     />
                 ))}
             </div>
