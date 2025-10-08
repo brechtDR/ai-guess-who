@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import * as geminiService from "../services/buildInAIService.ts";
+import * as builtInAIService from "../services/buildInAIService.ts";
 
 type UseSpeechToTextOptions = {
     onTranscription: (text: string) => void;
@@ -42,7 +42,7 @@ export const useSpeechToText = ({ onTranscription, onStateChange }: UseSpeechToT
                 const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
 
                 try {
-                    const transcribedText = await geminiService.transcribeAudio(audioBlob);
+                    const transcribedText = await builtInAIService.transcribeAudio(audioBlob);
                     onTranscription(transcribedText);
                     onStateChange?.("idle");
                 } catch (error) {

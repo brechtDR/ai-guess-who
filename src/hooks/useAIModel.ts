@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { DEFAULT_CHARACTERS } from "../constants";
-import * as geminiService from "../services/buildInAIService.ts";
+import * as builtInAIService from "../services/buildInAIService.ts";
 import { AIStatus, type Character } from "../types";
 
 /**
@@ -19,7 +19,7 @@ export const useAIModel = () => {
 
     // Initialize the AI model on mount
     useEffect(() => {
-        geminiService.initializeAI({
+        builtInAIService.initializeAI({
             onStatusChange: handleStatusChange,
             onProgress: setDownloadProgress,
         });
@@ -29,7 +29,7 @@ export const useAIModel = () => {
     useEffect(() => {
         const loadData = async () => {
             if (aiStatus === AIStatus.READY && !defaultCharsWithBlobs) {
-                const charactersWithBlobs = await geminiService.loadBlobsForDefaultCharacters(DEFAULT_CHARACTERS);
+                const charactersWithBlobs = await builtInAIService.loadBlobsForDefaultCharacters(DEFAULT_CHARACTERS);
                 setDefaultCharsWithBlobs(charactersWithBlobs);
             }
         };
@@ -38,7 +38,7 @@ export const useAIModel = () => {
 
     const reinitializeAI = () => {
         setAiStatus(AIStatus.INITIALIZING);
-        geminiService.initializeAI({
+        builtInAIService.initializeAI({
             onStatusChange: handleStatusChange,
             onProgress: setDownloadProgress,
         });

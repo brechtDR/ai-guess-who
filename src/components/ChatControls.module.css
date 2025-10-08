@@ -1,24 +1,23 @@
-
 .controlsContainer {
-	background-color: var(--color-surface-glass);
-	border: 1px solid var(--color-border-glass);
-	backdrop-filter: blur(var(--blur-glass));
-	border-radius: var(--border-radius-lg);
-	padding: var(--space-3);
 	display: flex;
-	flex-direction: column;
-	gap: var(--space-3);
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 	flex-shrink: 0; /* Prevent from shrinking */
+	flex-direction: column;
+	padding: var(--space-3);
+	gap: var(--space-3);
+	border: 1px solid var(--color-border-glass);
+	border-radius: var(--border-radius-lg);
+	backdrop-filter: blur(var(--blur-glass));
+	background-color: var(--color-surface-glass);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .chatLog {
-	flex-grow: 1;
-	overflow-y: auto;
 	display: flex;
+	flex-grow: 1;
 	flex-direction: column;
-	gap: var(--space-2);
 	padding-right: var(--space-2);
+	overflow-y: auto;
+	gap: var(--space-2);
 }
 
 .message {
@@ -31,28 +30,28 @@
 }
 
 .playerMessage {
-	background-color: var(--color-primary);
-	color: var(--color-background);
 	align-self: flex-end;
 	border-bottom-right-radius: var(--border-radius-sm);
+	background-color: var(--color-primary);
+	color: var(--color-background);
 	font-weight: 500;
 }
 
 .aiMessage {
-	background-color: rgba(0, 0, 0, 0.2);
-	color: var(--color-text-primary);
 	align-self: flex-start;
 	border-bottom-left-radius: var(--border-radius-sm);
+	background-color: rgba(0, 0, 0, 0.2);
+	color: var(--color-text-primary);
 }
 
 .systemMessage {
-	text-align: center;
+	align-self: center;
+	width: 100%;
+	max-width: 100%;
+	padding: var(--space-1);
 	color: var(--color-text-secondary);
 	font-size: 0.8rem;
-	align-self: center;
-	max-width: 100%;
-	width: 100%;
-	padding: var(--space-1);
+	text-align: center;
 }
 
 .loadingMessage {
@@ -60,32 +59,32 @@
 }
 
 .actionsContainer {
-	min-height: 44px; /* Height of the input form */
 	display: flex;
 	justify-content: center;
+	min-height: 44px; /* Height of the input form */
 }
 
 .inputForm {
 	display: flex;
 	align-items: center;
-	gap: var(--space-2);
 	width: 100%;
+	gap: var(--space-2);
 }
 
 .textInput {
 	flex-grow: 1;
-	background-color: rgba(0, 0, 0, 0.2);
+	padding: var(--space-2) var(--space-3);
 	border: 1px solid var(--color-border-glass);
 	border-radius: var(--border-radius-md);
-	padding: var(--space-2) var(--space-3);
+	background-color: rgba(0, 0, 0, 0.2);
 	color: var(--color-text-primary);
 	font-size: 1rem;
 	transition: var(--transition-fast);
 }
 
 .textInput:focus {
-	outline: none;
 	border-color: var(--color-primary);
+	outline: none;
 	box-shadow: 0 0 8px var(--color-primary);
 }
 
@@ -94,14 +93,14 @@
 }
 
 .iconButton {
-	flex-shrink: 0;
-	width: 44px;
-	height: 44px;
-	border-radius: 50%;
 	display: flex;
+	flex-shrink: 0;
 	align-items: center;
 	justify-content: center;
+	width: 44px;
+	height: 44px;
 	border: none;
+	border-radius: 50%;
 	cursor: pointer;
 	transition: var(--transition-fast);
 }
@@ -113,8 +112,8 @@
 }
 
 .micIdle {
-	background-color: rgba(0, 0, 0, 0.2);
 	border: 1px solid var(--color-border-glass);
+	background-color: rgba(0, 0, 0, 0.2);
 }
 .micIdle:hover {
 	border-color: var(--color-border-glass-hover);
@@ -123,8 +122,8 @@
 
 .micRecording {
 	background-color: var(--color-error);
-	animation: pulse 1.5s infinite;
 	box-shadow: 0 0 12px var(--color-error);
+	animation: pulse 1.5s infinite;
 }
 
 .sendButton {
@@ -136,26 +135,26 @@
 }
 .sendButton:disabled {
 	background-color: var(--color-border-glass);
+	box-shadow: none;
 	cursor: not-allowed;
 	opacity: 0.6;
-	box-shadow: none;
 }
 
 .actionButton {
-	border: none;
-	font-weight: 700;
 	padding: var(--space-2) var(--space-4);
+	border: none;
 	border-radius: var(--border-radius-md);
+	color: var(--color-background);
+	font-weight: 700;
+	font-size: 1rem;
+	text-shadow: none;
 	cursor: pointer;
 	transition: var(--transition-fast);
-	font-size: 1rem;
-	color: var(--color-background);
-	text-shadow: none;
 }
 .actionButton:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
 	box-shadow: none;
+	cursor: not-allowed;
+	opacity: 0.5;
 }
 .actionButton:hover:not(:disabled) {
 	transform: scale(1.05);
@@ -208,15 +207,15 @@
 /* Mobile sticky footer */
 @media (max-width: 819px) {
 	.controlsContainer {
+		z-index: 10;
 		position: fixed;
+		right: 0;
 		bottom: 0;
 		left: 0;
-		right: 0;
-		z-index: 10;
-		border-bottom-left-radius: 0;
-		border-bottom-right-radius: 0;
 		height: 180px;
 		max-height: 30vh;
+		border-bottom-right-radius: 0;
+		border-bottom-left-radius: 0;
 	}
 }
 

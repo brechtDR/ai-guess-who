@@ -1,26 +1,25 @@
-
 .boardContainer {
-	padding: var(--space-4);
-	background-color: var(--color-surface-glass);
-	border: 1px solid var(--color-border-glass);
-	backdrop-filter: blur(var(--blur-glass));
-	border-radius: var(--border-radius-lg);
-	container-type: inline-size; /* Define as a container */
 	container-name: board;
+	container-type: inline-size; /* Define as a container */
+	padding: var(--space-4);
+	border: 1px solid var(--color-border-glass);
+	border-radius: var(--border-radius-lg);
+	backdrop-filter: blur(var(--blur-glass));
+	background-color: var(--color-surface-glass);
 	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .boardGrid {
 	display: grid;
-	gap: var(--space-2);
 	/* Default for very narrow containers */
 	grid-template-columns: repeat(3, 1fr);
+	gap: var(--space-2);
 }
 
 /* Use container queries to adjust columns based on the board's own width */
 @container board (min-width: 380px) {
 	.boardGrid {
-		gap: var(--space-4);
 		grid-template-columns: repeat(5, 1fr);
+		gap: var(--space-4);
 	}
 }

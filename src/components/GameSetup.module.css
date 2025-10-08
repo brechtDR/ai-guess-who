@@ -1,26 +1,25 @@
-
 .setupContainer {
-	min-height: 100vh;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
+	min-height: 100vh;
 	padding: var(--space-4);
 	animation: fadeIn 0.5s ease-out;
 }
 
 .titleContainer {
-	text-align: center;
-	margin-bottom: 3rem;
 	max-width: 600px;
+	margin-bottom: 3rem;
+	text-align: center;
 }
 
 .mainTitle {
-	font-size: 3rem;
-	font-weight: 800;
 	margin-bottom: var(--space-2);
 	background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
 	-webkit-background-clip: text;
+	font-weight: 800;
+	font-size: 3rem;
 	-webkit-text-fill-color: transparent;
 	filter: drop-shadow(0 0 10px var(--color-primary));
 }
@@ -38,13 +37,13 @@
 }
 
 .statusContainer {
-	min-height: 80px;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 	width: 100%;
 	max-width: 600px;
+	min-height: 80px;
 	margin-bottom: var(--space-4);
 	gap: var(--space-4);
 }
@@ -73,56 +72,56 @@
 }
 
 .progressWrapper {
-	width: 100%;
 	display: flex;
 	align-items: center;
-	gap: var(--space-4);
+	width: 100%;
 	margin-top: var(--space-2);
+	gap: var(--space-4);
 }
 
 .progressBarContainer {
 	flex-grow: 1;
-	background-color: rgba(0, 0, 0, 0.2);
-	border-radius: var(--border-radius-md);
 	height: 12px;
 	overflow: hidden;
 	border: 1px solid var(--color-border-glass);
+	border-radius: var(--border-radius-md);
+	background-color: rgba(0, 0, 0, 0.2);
 }
 
 .progressBar {
 	width: 0%;
 	height: 100%;
-	background-color: var(--color-primary);
 	border-radius: var(--border-radius-md);
-	transition: width 0.3s ease-in-out;
+	background-color: var(--color-primary);
 	box-shadow: 0 0 8px var(--color-primary);
+	transition: width 0.3s ease-in-out;
 }
 
 .progressPercentage {
-	font-size: 0.9rem;
-	font-weight: 500;
-	color: var(--color-text-secondary);
 	min-width: 40px;
+	color: var(--color-text-secondary);
+	font-weight: 500;
+	font-size: 0.9rem;
 	text-align: right;
 }
 
 .errorText {
-	color: var(--color-error);
-	background-color: rgba(255, 68, 106, 0.1);
-	padding: var(--space-3);
-	border-radius: var(--border-radius-md);
-	border: 1px solid var(--color-error);
 	width: 100%;
-	text-align: center;
+	padding: var(--space-3);
+	border: 1px solid var(--color-error);
+	border-radius: var(--border-radius-md);
+	background-color: rgba(255, 68, 106, 0.1);
+	color: var(--color-error);
 	font-size: 0.9rem;
+	text-align: center;
 }
 
 .optionsGrid {
 	display: grid;
 	grid-template-columns: 1fr;
-	gap: var(--space-4);
-	max-width: 64rem;
 	width: 100%;
+	max-width: 64rem;
+	gap: var(--space-4);
 }
 
 @media (min-width: 768px) {
@@ -137,46 +136,48 @@
 }
 
 .optionCard {
-	background-color: var(--color-surface-glass);
-	border: 1px solid var(--color-border-glass);
-	backdrop-filter: blur(var(--blur-glass));
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-	border-radius: var(--border-radius-lg);
-	padding: var(--space-8);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
+	padding: var(--space-8);
+	border: 1px solid var(--color-border-glass);
+	border-radius: var(--border-radius-lg);
+	backdrop-filter: blur(var(--blur-glass));
+	background-color: var(--color-surface-glass);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+	color: var(--color-text-primary);
+	font-family: inherit;
 	text-align: center;
 	cursor: pointer;
 	transition: var(--transition-fast);
-	color: var(--color-text-primary);
-	font-family: inherit;
 }
 
 .optionCard:hover:not(:disabled) {
-	border-color: var(--color-border-glass-hover);
 	transform: translateY(-5px);
-	box-shadow: 0 0 16px var(--color-primary), 0 8px 32px rgba(0, 0, 0, 0.2);
+	border-color: var(--color-border-glass-hover);
+	box-shadow:
+		0 0 16px var(--color-primary),
+		0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .optionCard:disabled {
-	opacity: 0.5;
 	cursor: not-allowed;
+	opacity: 0.5;
 }
 
 .iconWrapper {
 	width: 4rem; /* w-16 */
 	height: 4rem; /* h-16 */
-	color: var(--color-primary);
 	margin-bottom: var(--space-4);
+	color: var(--color-primary);
 	filter: drop-shadow(0 0 8px var(--color-primary));
 }
 
 .cardTitle {
-	font-size: 1.5rem; /* text-2xl */
-	font-weight: 700;
 	margin-bottom: var(--space-2);
+	font-weight: 700;
+	font-size: 1.5rem; /* text-2xl */
 }
 
 .cardDescription {
@@ -184,46 +185,46 @@
 }
 
 .settingsContainer {
-	margin-top: 3rem;
-	padding: var(--space-6);
-	background-color: var(--color-surface-glass);
-	border: 1px solid var(--color-border-glass);
-	backdrop-filter: blur(var(--blur-glass));
-	border-radius: var(--border-radius-lg);
-	width: 100%;
-	max-width: 56rem;
 	display: flex;
 	flex-direction: column;
+	width: 100%;
+	max-width: 56rem;
+	margin-top: 3rem;
+	padding: var(--space-6);
 	gap: var(--space-2);
+	border: 1px solid var(--color-border-glass);
+	border-radius: var(--border-radius-lg);
+	backdrop-filter: blur(var(--blur-glass));
+	background-color: var(--color-surface-glass);
 }
 
 .settingsTitle {
-	font-size: 1.25rem;
-	font-weight: 700;
 	margin-bottom: var(--space-2);
 	color: var(--color-text-primary);
+	font-weight: 700;
+	font-size: 1.25rem;
 }
 
 .settingLabel {
 	display: flex;
 	align-items: center;
 	gap: var(--space-3);
-	font-size: 1rem;
-	font-weight: 500;
-	cursor: pointer;
 	color: var(--color-text-primary);
+	font-weight: 500;
+	font-size: 1rem;
+	cursor: pointer;
 }
 
 .settingCheckbox {
+	flex-shrink: 0;
 	width: 1.25rem;
 	height: 1.25rem;
 	accent-color: var(--color-primary);
-	flex-shrink: 0;
 }
 
 .settingDescription {
+	padding-left: calc(1.25rem + var(--space-3)); /* Align with text above */
 	color: var(--color-text-secondary);
 	font-size: 0.9rem;
-	padding-left: calc(1.25rem + var(--space-3)); /* Align with text above */
 	line-height: 1.5;
 }

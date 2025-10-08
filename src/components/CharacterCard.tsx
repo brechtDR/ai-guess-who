@@ -3,8 +3,6 @@ import { type Character } from "../types";
 import styles from "./CharacterCard.module.css";
 import { CheckIcon, XIcon } from "./icons";
 
-// FIX: Changed ComponentPropsWithoutRef<"div"> to Omit<ComponentPropsWithoutRef<"div">, "onClick">
-// to correctly override the onClick prop and avoid a type conflict.
 export type CharacterCardProps = Omit<ComponentPropsWithoutRef<"div">, "onClick"> & {
     /** The character data to display. */
     character: Character;

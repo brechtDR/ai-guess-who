@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import * as geminiService from "../services/buildInAIService.ts";
+import * as buildInAIService from "../services/buildInAIService.ts";
 import { GameState, type Character, type EliminationAnalysisResult, type GameWinner, type Message } from "../types";
 
 /**
@@ -40,7 +40,7 @@ export const useGameState = () => {
             }
 
             try {
-                await geminiService.startNewGameSession();
+                await buildInAIService.startNewGameSession();
             } catch (error) {
                 console.error("Failed to start AI game session:", error);
                 throw error; // Re-throw to be handled by the caller

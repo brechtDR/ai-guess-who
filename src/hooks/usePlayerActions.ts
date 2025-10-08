@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import * as geminiService from "../services/buildInAIService.ts";
+import * as builtInAIService from "../services/buildInAIService.ts";
 import { GameState, type Character, type Message } from "../types";
 
 const FINAL_GUESS_REGEX = /^(?:is it|is the person|is the character|is your? character)\s+(.*?)\??$/i;
@@ -37,7 +37,7 @@ export const usePlayerActions = ({
 
             const handleAsNormalQuestion = async () => {
                 try {
-                    const answer = await geminiService.getAnswerToPlayerQuestion(aiSecret, question);
+                    const answer = await builtInAIService.getAnswerToPlayerQuestion(aiSecret, question);
                     addMessage({ sender: "AI", text: answer });
                     addMessage({
                         sender: "SYSTEM",
