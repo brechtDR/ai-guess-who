@@ -26,6 +26,7 @@ export const useGameLogic = () => {
         setAiStatusMessage,
         setDownloadProgress,
         reinitializeAI,
+        handleDownload,
     } = useAIModel();
 
     const {
@@ -186,5 +187,6 @@ export const useGameLogic = () => {
         handlePlayerAnswer,
         handleConfirmAIAnalysis,
         handleSetReviewMode,
+        handleDownload,
     };
 };

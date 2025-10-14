@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import * as builtInAIService from "../services/buildInAIService.ts";
+import * as builtInAIService from "../services/builtInAIService.ts";
 
 type UseSpeechToTextOptions = {
     onTranscription: (text: string) => void;

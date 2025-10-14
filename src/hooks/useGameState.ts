@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import * as buildInAIService from "../services/buildInAIService.ts";
+import * as buildInAIService from "../services/builtInAIService.ts";
 import { GameState, type Character, type EliminationAnalysisResult, type GameWinner, type Message } from "../types";
 
 /**

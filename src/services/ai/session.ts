@@ -22,14 +22,13 @@ function getModelEntryPoint(): LanguageModel | null {
 }
 
 /**
- * Initializes the AI model, handling availability checks and downloads.
+ * Initializes the AI model, handling availability checks.
  * @param options Callbacks for status and progress updates.
  */
 export async function initialize(options: {
     onStatusChange: (status: AIStatus, message?: string) => void;
-    onProgress?: (progress: number) => void;
 }): Promise<void> {
-    const { onStatusChange, onProgress } = options;
+    const { onStatusChange } = options;
 
     // Avoid re-initializing if the model is already available.
     if (model && session) {
@@ -55,26 +54,9 @@ export async function initialize(options: {
             session = await model.create(createOptions);
             onStatusChange(AIStatus.READY, "AI Model Ready!");
         } else if (availability === "downloadable" || availability === "downloading") {
-            onStatusChange(AIStatus.DOWNLOADING, "AI model is downloading...");
-
-            session = await model.create({
-                ...createOptions,
-                monitor: (e: any) => {
-                    if (onProgress && e.addEventListener) {
-                        e.addEventListener("downloadprogress", (event: any) => {
-                            if (event.loaded && event.total) {
-                                const progress = (event.loaded / event.total) * 100;
-                                onProgress(progress);
-                                onStatusChange(
-                                    AIStatus.DOWNLOADING,
-                                    `AI model is downloading... ${Math.floor(progress)}%`,
-                                );
-                            }
-                        });
-                    }
-                },
-            });
-            onStatusChange(AIStatus.READY, "AI Model Ready!");
+            // "downloading" is treated like "downloadable" to show the button,
+            // as the user might have refreshed the page. Clicking download should resume.
+            onStatusChange(AIStatus.DOWNLOADABLE, "The AI model needs to be downloaded before you can play.");
         } else {
             onStatusChange(AIStatus.UNAVAILABLE, "The on-device AI is not supported on this device.");
         }
@@ -83,6 +65,66 @@ export async function initialize(options: {
         session = null; // Ensure session is null on error
         model = null;
         onStatusChange(AIStatus.ERROR, e.message || "An error occurred during AI setup.");
+    }
+}
+
+/**
+ * Triggers the download of the AI model.
+ * @param options Callbacks for status and progress updates.
+ */
+export async function downloadModel(options: {
+    onStatusChange: (status: AIStatus, message?: string) => void;
+    onProgress?: (progress: number) => void;
+}): Promise<void> {
+    const { onStatusChange, onProgress } = options;
+
+    if (!model) {
+        onStatusChange(AIStatus.ERROR, "AI model not found. Cannot start download.");
+        return;
+    }
+
+    try {
+        onStatusChange(AIStatus.DOWNLOADING, "AI model is downloading...");
+        session = await model.create({
+            ...createOptions,
+            monitor: (e: any) => {
+                console.log("[AI_DEBUG] Monitor object received:", e);
+
+                if (onProgress && e.addEventListener) {
+                    // This API is experimental. We listen for 'downloadprogress', which seems most reliable.
+                    e.addEventListener("downloadprogress", (event: any) => {
+                        console.log("[AI_DEBUG] 'downloadprogress' event received:", event);
+
+                        const { loaded, total } = event;
+
+                        // The event might provide progress as bytes (loaded/total) or a ratio (loaded).
+                        // This handles both cases and ensures `loaded = 0` is reported correctly.
+                        if (typeof loaded === "number") {
+                            let progressPercent = 0;
+                            if (typeof total === "number" && total > 0) {
+                                progressPercent = (loaded / total) * 100;
+                            } else {
+                                progressPercent = loaded * 100;
+                            }
+
+                            // Clamp value to be safe
+                            const clampedProgress = Math.max(0, Math.min(100, progressPercent));
+
+                            onProgress(clampedProgress);
+                            onStatusChange(
+                                AIStatus.DOWNLOADING,
+                                `AI model is downloading... ${Math.floor(clampedProgress)}%`,
+                            );
+                        }
+                    });
+                }
+            },
+        });
+        onStatusChange(AIStatus.READY, "AI Model Ready!");
+    } catch (e: any) {
+        console.error("AI Download Error:", e);
+        session = null;
+        onStatusChange(AIStatus.ERROR, e.message || "An error occurred during AI download.");
     }
 }
 

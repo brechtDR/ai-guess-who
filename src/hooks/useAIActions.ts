@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import * as builtInAIService from "../services/buildInAIService.ts";
+import * as builtInAIService from "../services/builtInAIService.ts";
 import { GameState, type Character, type EliminationAnalysisResult, type Message } from "../types";
 
 const FINAL_GUESS_REGEX = /^(?:is it|is the person|is the character|is your? character)\s+(.*?)\??$/i;

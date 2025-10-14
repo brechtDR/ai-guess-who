@@ -47,6 +47,7 @@ function App() {
         handlePlayerAnswer,
         handleConfirmAIAnalysis,
         handleSetReviewMode,
+        handleDownload,
     } = useGameLogic();
 
     const aiEliminatedChars = useMemo(() => {
@@ -70,6 +71,7 @@ function App() {
                         isLoading={isLoading}
                         isReviewModeEnabled={isReviewModeEnabled}
                         onSetReviewMode={handleSetReviewMode}
+                        onDownload={handleDownload}
                     />
                 );
             case GameState.CUSTOM_SETUP:

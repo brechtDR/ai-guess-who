@@ -44,7 +44,7 @@
 	width: 100%;
 	max-width: 600px;
 	min-height: 80px;
-	margin-bottom: var(--space-4);
+    margin-block: var(--space-2) var(--space-8);
 	gap: var(--space-4);
 }
 
@@ -75,7 +75,7 @@
 	display: flex;
 	align-items: center;
 	width: 100%;
-	margin-top: var(--space-2);
+	margin-block: var(--space-2);
 	gap: var(--space-4);
 }
 
@@ -227,4 +227,38 @@
 	color: var(--color-text-secondary);
 	font-size: 0.9rem;
 	line-height: 1.5;
+}
+
+.downloadPrompt {
+	max-width: 400px;
+	margin-bottom: var(--space-2);
+}
+
+.downloadButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-top: var(--space-2);
+	padding: var(--space-3) var(--space-6);
+	gap: var(--space-3);
+	border: none;
+	border-radius: var(--border-radius-md);
+	background-color: var(--color-primary);
+	color: var(--color-background);
+	font-weight: 700;
+	font-size: 1.1rem;
+	text-shadow: none;
+	cursor: pointer;
+	transition: var(--transition-fast);
+}
+
+.downloadButton:hover {
+	transform: scale(1.05);
+	box-shadow: 0 0 16px var(--color-primary);
+}
+
+.downloadButton svg {
+	width: 24px;
+	height: 24px;
+    color: inherit;
 }
