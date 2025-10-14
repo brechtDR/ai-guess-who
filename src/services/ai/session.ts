@@ -43,7 +43,7 @@ export async function initialize(options: {
     if (!model) {
         onStatusChange(
             AIStatus.UNAVAILABLE,
-            "The on-device AI API is not available in this browser. Please useGameSettings.ts a supported browser (e.g., latest Chrome) and enable the necessary feature flags if required.",
+            "The on-device AI API is not available in this browser. Please use a supported browser (e.g., latest Chrome) and enable the necessary feature flags if required.",
         );
         return;
     }
