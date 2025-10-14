@@ -25,6 +25,7 @@ export type GameWinner = "PLAYER" | "AI" | null;
 
 export enum AIStatus {
     INITIALIZING,
+    DOWNLOADABLE,
     DOWNLOADING,
     READY,
     UNAVAILABLE,

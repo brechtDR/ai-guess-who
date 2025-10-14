@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { DEFAULT_CHARACTERS } from "../constants";
-import * as builtInAIService from "../services/buildInAIService.ts";
+import * as builtInAIService from "../services/builtInAIService.ts";
 import { AIStatus, type Character } from "../types";
 
 /**
@@ -21,7 +21,6 @@ export const useAIModel = () => {
     useEffect(() => {
         builtInAIService.initializeAI({
             onStatusChange: handleStatusChange,
-            onProgress: setDownloadProgress,
         });
     }, []);
 
@@ -40,6 +39,12 @@ export const useAIModel = () => {
         setAiStatus(AIStatus.INITIALIZING);
         builtInAIService.initializeAI({
             onStatusChange: handleStatusChange,
+        });
+    };
+
+    const handleDownload = () => {
+        builtInAIService.downloadModel({
+            onStatusChange: handleStatusChange,
             onProgress: setDownloadProgress,
         });
     };
@@ -53,5 +58,6 @@ export const useAIModel = () => {
         setAiStatusMessage,
         setDownloadProgress,
         reinitializeAI,
+        handleDownload,
     };
 };

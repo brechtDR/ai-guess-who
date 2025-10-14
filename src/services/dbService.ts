@@ -73,7 +73,9 @@ export async function loadCustomCharacters(): Promise<Character[] | null> {
             }
 
             const characters: Character[] = storedChars.map((char) => ({
-                ...char,
+                character_id: char.id,
+                name: char.name,
+                imageBlob: char.imageBlob,
                 image: URL.createObjectURL(char.imageBlob),
             }));
             db.close();

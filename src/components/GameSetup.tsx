@@ -1,7 +1,7 @@
 import React, { type ComponentPropsWithoutRef, useEffect, useRef, useState } from "react";
 import { AIStatus } from "../types";
 import styles from "./GameSetup.module.css";
-import { CameraIcon, CheckCircleIcon, PlayAgainIcon, SpinnerIcon, UsersIcon } from "./icons";
+import { CameraIcon, CheckCircleIcon, DownloadIcon, PlayAgainIcon, SpinnerIcon, UsersIcon } from "./icons";
 
 type SetupOptionCardProps = ComponentPropsWithoutRef<"button"> & {
     title: string;
@@ -42,6 +42,8 @@ export type GameSetupProps = {
     isReviewModeEnabled: boolean;
     /** Callback to set the AI analysis review mode. */
     onSetReviewMode: (isEnabled: boolean) => void;
+    /** Callback to initiate the AI model download. */
+    onDownload: () => void;
 };
 
 /**
@@ -60,6 +62,7 @@ function GameSetup({
     isLoading,
     isReviewModeEnabled,
     onSetReviewMode,
+    onDownload,
 }: GameSetupProps) {
     const isReady = aiStatus === AIStatus.READY;
     const defaultGameDisabled = !isReady || !hasDefaultChars || isLoading;
@@ -88,6 +91,16 @@ function GameSetup({
         }
 
         switch (aiStatus) {
+            case AIStatus.DOWNLOADABLE:
+                return (
+                    <div className={styles.statusContainer} role="status">
+                        <p className={`${styles.subtitle} ${styles.downloadPrompt}`}>{aiStatusMessage}</p>
+                        <button onClick={onDownload} className={styles.downloadButton}>
+                            <DownloadIcon />
+                            Download AI Model
+                        </button>
+                    </div>
+                );
             case AIStatus.INITIALIZING:
             case AIStatus.DOWNLOADING:
                 return (
