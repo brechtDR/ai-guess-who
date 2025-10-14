@@ -2,6 +2,10 @@
 
 A modern, privacy-focused take on the classic "Guess Who?" board game, where you challenge a powerful AI that runs entirely in your browser. This project showcases the capabilities of the experimental on-device Generative AI API.
 
+## Hosted version
+
+Play the game at: [https://brechtdr.github.io/ai-guess-who/](https://brechtdr.github.io/ai-guess-who/)
+
 ## About The Project
 
 This isn't your average web game. "AI Guess Who?" brings the classic deductive reasoning game to life with a unique twist: your opponent is a Gemini Nano AI model that lives on your device.
@@ -14,14 +18,16 @@ This isn't your average web game. "AI Guess Who?" brings the classic deductive r
 - **Voice Input**: Ask your questions hands-free using your microphone, powered by the AI's multi-modal capabilities.
 - **Strategic AI Opponent**: The AI doesn't just answer questions; it analyzes the board to ask strategically sound questions designed to eliminate the most characters at once.
 
+Read more in [this blog post](https://developer.chrome.com/blog/ai-guessing-game).
+
 ## Getting Started
 
 Because this project uses experimental web technology, a specific browser and configuration are required to run it.
 
 ### Prerequisites
 
-1.  **Browser**: You must use a browser that supports the on-device `LanguageModel` API, such as **Google Chrome Canary**.
-2.  **Enable Feature Flags**: Open your Chrome Canary browser and enable the following two flags by copying and pasting the URLs into your address bar, setting them to "Enabled", and restarting the browser.
+1.  **Browser**: You must use a browser that supports the on-device `LanguageModel` API, such as **Google Chrome** (you may notice better performance using **Chrome Canary** with the latest improvements).
+2.  The [hosted version](#hosted-version) uses an [origin trial token](https://developer.chrome.com/docs/web-platform/origin-trials) to enable the necessary features, but for running it locally you will need to **Enable Feature Flags**: Open your Chrome browser and enable the following two flags by copying and pasting the URLs into your address bar, setting them to "Enabled", and restarting the browser.
 
 - `chrome://flags/#prompt-api-for-gemini-nano` (enabled)
 - `chrome://flags/#optimization-guide-on-device-model` (place in bypass)
